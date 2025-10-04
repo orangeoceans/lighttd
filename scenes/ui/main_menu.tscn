@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://3df665q7ym5g"]
+[gd_scene load_steps=3 format=3 uid="uid://3df665q7ym5g"]
 
 [ext_resource type="Script" uid="uid://bul5rcs50mrag" path="res://scripts/main_menu.gd" id="1_sl1te"]
+[ext_resource type="Texture2D" uid="uid://dyrkubcrhrqio" path="res://icon.svg" id="2_fe2o3"]
 
 [node name="mainMenu" type="Node2D"]
 script = ExtResource("1_sl1te")
@@ -34,6 +35,10 @@ offset_bottom = 229.0
 focus_neighbor_top = NodePath("../Start Game")
 focus_neighbor_bottom = NodePath("../Start Game")
 text = "EXIT"
+
+[node name="Title(TODOreplace sprite)" type="Sprite2D" parent="CanvasLayer"]
+position = Vector2(440, 161)
+texture = ExtResource("2_fe2o3")
 
 [connection signal="pressed" from="CanvasLayer/Control/Start Game" to="." method="_on_start_game_pressed"]
 [connection signal="pressed" from="CanvasLayer/Control/Exit Game" to="." method="_on_exit_game_pressed"]

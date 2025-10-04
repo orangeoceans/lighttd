@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://bmwk7rv2x7uid"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_tsx0o"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_by3tn"]
+
+[node name="Tower" type="StaticBody3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.422611, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_tsx0o")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.687002, 0, 0, 0, 0.622976, 0, 0, 0, 0.687002, 0, 0.700194, 0)
+mesh = SubResource("CylinderMesh_by3tn")

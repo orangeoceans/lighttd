@@ -1,5 +1,8 @@
-[gd_scene format=3 uid="uid://cr6nssg54kiew"]
+[gd_scene load_steps=2 format=3 uid="uid://cr6nssg54kiew"]
+
+[ext_resource type="Script" uid="uid://c470xp6es0cbv" path="res://scripts/camera.gd" id="1_i50yt"]
 
 [node name="CameraRig" type="Node3D"]
 
 [node name="Camera3D" type="Camera3D" parent="."]
+script = ExtResource("1_i50yt")

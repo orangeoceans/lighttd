@@ -8,11 +8,10 @@
 [node name="testLevel" parent="." instance=ExtResource("1_yqjtg")]
 
 [node name="CameraRig" parent="." instance=ExtResource("2_lnu2h")]
-transform = Transform3D(0.707107, 0.408607, -0.577096, 0, 0.816138, 0.577858, 0.707107, -0.408607, 0.577096, -5, 4, 5)
+transform = Transform3D(0.707107, 0.408607, -0.577096, 0, 0.816138, 0.577858, 0.707107, -0.408607, 0.577096, 0.408063, 11.5441, 15.5268)
 
 [node name="Camera3D" parent="CameraRig" index="0"]
 projection = 1
-size = 11.527
-near = 0.001
+size = 16.038
 
 [editable path="CameraRig"]

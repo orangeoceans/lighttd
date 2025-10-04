@@ -3,57 +3,234 @@ extends Node3D
 
 class_name Board
 
-@export var gridSize: Vector2i = Vector2i(4,4) ###change this as necessary
-@export var cellSize: float = 1.0
-@export var boardHeight: float = 0.0
 
 
-var occupiedSpaces := {}
-@onready var _aabb := AABB(Vector3.ZERO, Vector3(gridSize.x * cellSize, 0.1, gridSize.y * cellSize))
+###
+
+
+@export var hex_size: float = 1.05                 # center -> corner radius
+@export var buildable_scene: PackedScene          # for '.' grass/buildable
+@export var road_scene: PackedScene               # for 'R' road tiles
+@export var spawn_scene: PackedScene              # for 'S'
+@export var goal_scene: PackedScene               # for 'G'
+@onready var scenePath: Path3D = $Path3D
+
+
+###
+
+
+@onready var basicEnemy : PackedScene = preload("res://scenes/enemies/basicEnemy.tscn")
+
+var enemiesToSpawn : int = 3 ### number of enemies to spawn per round
+
+var canSpawnEnemiesCooldown : bool = true; 
+
+@onready var spawn_timer: Timer = $"../utilities/spawnTimer"
+@onready var mirrorTower : PackedScene = preload("res://scenes/towers/tower.tscn")
+
+@onready var camera = Globals.cameraNode
 
 
 
 func _ready() -> void:
-	Globals.emit_signal("board_ready", self)
 	
+	var map := [
 	
-func gridToWorldCoords (cell: Vector2i) -> Vector3:
-	return Vector3(
-		(cell.x + 0.5) * cellSize,
-		boardHeight,
-		(cell.y + 0.5) * cellSize
-	)
-	
-	
-	
-func worldToGridCoords (p: Vector3) -> Vector2i:
-	var x := int(floor(p.x / cellSize))
-	var y := int(floor(p.y / cellSize))
-	return Vector2i(clamp(x, 0, gridSize.x - 1), clamp(y, 0, gridSize.y - 1))
-	
-	
-	
-func isFree(cell: Vector2i) -> bool:
-	return !occupiedSpaces.has(cell)
-	
-	
-	
-func occupy(cell: Vector2i, val: bool) -> void:
-	if val:
-		occupiedSpaces[cell] = true
-	else:
-		occupiedSpaces.erase(cell)
-		
+	".............",
+	".............",
+	"SRR.......RRG",
+	"..R......R...",
+	"...RRRR..R...",
+	"......RRR....",
+	".............",
+	".............",
+	]	
+	setUpBoard(map)
 
 
-func _draw() -> void:
-	var cs := cellSize
-	for x in range(cellSize + 1):
-		var a := Vector3(x * cs, boardHeight + 0.01, 0)
-		var b := Vector3(x * cs, boardHeight + 0.01, cellSize * cs)
-		get_viewport().debug_draw_line_3d(a, b, Color(0.1,0.8,1,0.5))
+
+
+func _process (delta):
+	spawner()
+	pass
+
+
+
+
+
+func spawner() -> void:
+	if enemiesToSpawn > 0 and canSpawnEnemiesCooldown:
+		spawn_timer.start()
+		var currentEnemy = basicEnemy.instantiate()
+		# Safety: ensure scenePath exists and is valid
+		if !is_instance_valid(scenePath):
+			# Recreate it if you ever change _clear_kids() again
+			scenePath = Path3D.new()
+			scenePath.name = "EnemyPath"
+			add_child(scenePath)
+		scenePath.add_child(currentEnemy)  # now safe
+		enemiesToSpawn -= 1
+		canSpawnEnemiesCooldown = false
+
+
+
+func _on_spawn_timer_timeout() -> void:
+	canSpawnEnemiesCooldown = true
+
+
+
+	
+func setUpBoard(rows: Array) -> void:
+	_clear_kids()
+
+	var tiles_root := Node3D.new()
+	tiles_root.name = "Tiles"
+	add_child(tiles_root)
+
+	var w = rows[0].length()
+	var h := rows.size()
+
+	var spawn := Vector2i(-1, -1)
+	var goal  := Vector2i(-1, -1)
+
+	# 1) Drop tiles in a perfect hex lattice (pointy-top, odd-r offset)
+	for r in h:
+		var line: String = rows[r]
+		for c in w:
+			var ch := line[c]
+			var pos := _hex_center(c, r)  # XZ plane, Y up
+
+			match ch:
+				'S':
+					if spawn_scene:
+						var s = spawn_scene.instantiate() as Node3D
+						s.position = pos
+						tiles_root.add_child(s)
+					if road_scene:
+						var rs = road_scene.instantiate() as Node3D
+						rs.position = pos
+						tiles_root.add_child(rs)
+					spawn = Vector2i(c, r)
+					scenePath.global_position = Vector3(spawn.x, spawn.y-1, 0)
+				'G':
+					if goal_scene:
+						var g = goal_scene.instantiate() as Node3D
+						g.position = pos
+						tiles_root.add_child(g)
+					if road_scene:
+						var rg = road_scene.instantiate() as Node3D
+						rg.position = pos
+						tiles_root.add_child(rg)
+					goal = Vector2i(c, r)
+				'R':
+					if road_scene:
+						var rhex = road_scene.instantiate() as Node3D
+						rhex.position = pos
+						tiles_root.add_child(rhex)
+				'#':
+					if buildable_scene:
+						var blocked = buildable_scene.instantiate() as Node3D
+						blocked.position = pos
+						tiles_root.add_child(blocked)
+				'.':
+					if buildable_scene:
+						var gnd = buildable_scene.instantiate() as Node3D
+						gnd.position = pos
+						tiles_root.add_child(gnd)
+				_:
+					# Unknown symbol: skip silently for jam speed
+					pass
+
+	# 2) Trace the road by walking neighbors from S to G (no branches)
+	if spawn.x == -1 or goal.x == -1:
+		push_warning("Map must contain one 'S' and one 'G'.")
+		return
+
+	var path_points := PackedVector3Array()
+	var cur := spawn
+	var prev := Vector2i(-999, -999)
+	var guard = w * h + 8  # loop guard
+
+	path_points.append(_hex_center(cur.x, cur.y))
+
+	while cur != goal and guard > 0:
+		guard -= 1
+		var nexts := _road_neighbors(cur, rows)
+		# Prefer not going back to where we came from
+		var chosen := Vector2i(-1, -1)
+		for n in nexts:
+			if n != prev:
+				chosen = n
+				break
+		if chosen == Vector2i(-1, -1):
+			# Dead end or loop; bail
+			push_warning("Road trace failed (branching or break). Ensure a single continuous path.")
+			return
+		prev = cur
+		cur = chosen
+		path_points.append(_hex_center(cur.x, cur.y))
+
+	if cur != goal:
+		push_warning("Could not reach 'G' from 'S'.")
+		return
+
+	# 3) Conjure a Path3D from the traced centers
+	var curve := Curve3D.new()
+	for p in path_points:
+		curve.add_point(p)
+	curve.bake_interval = hex_size * 0.25
+
+
+	scenePath.name = "EnemyPath"
+	scenePath.curve = curve
+	
+	
+	
+	
+	
+	
+# ===== Helpers: pointy-top, odd-r layout =====
+func _hex_center(col: int, row: int) -> Vector3:
+	# Pointy-top hex spacing:
+	# horizontal step = sqrt(3) * size
+	# vertical step   = 1.5 * size
+	var x := hex_size * sqrt(3.0) * (col + 0.5 * (row & 1))
+	var z := hex_size * 1.5 * row
+	return Vector3(x, 0.0, z)
+
+
+
+func _road_neighbors(p: Vector2i, rows: Array) -> Array[Vector2i]:
+	var w = rows[0].length()
+	var h := rows.size()
+	var r := p.y
+	var c := p.x
+	var odd := (r & 1) == 1
+
+	# odd-r neighbor sets
+	var deltas_even := [Vector2i(+1,0), Vector2i(0,-1), Vector2i(-1,-1), Vector2i(-1,0), Vector2i(-1,+1), Vector2i(0,+1)]
+	var deltas_odd  := [Vector2i(+1,0), Vector2i(+1,-1), Vector2i(0,-1), Vector2i(-1,0), Vector2i(0,+1), Vector2i(+1,+1)]
+	var deltas :=  deltas_odd if odd else deltas_even
+
+	var out: Array[Vector2i] = []
+	for d in deltas:
+		var nc = c + d.x
+		var nr = r + d.y
+		if nc >= 0 and nc < w and nr >= 0 and nr < h:
+			var ch := (rows[nr] as String)[nc]
+			if ch == 'R' or ch == 'S' or ch == 'G':
+				out.append(Vector2i(nc, nr))
+	return out
+
+
+
+func _clear_kids() -> void: ### the IDF is interested in this one 
+	for child in get_children():
+		if is_instance_valid(scenePath) and child == scenePath:
+			# Optional: reset its curve so it’s clean for the next run
+			scenePath.curve = Curve3D.new()
+			continue
+		child.queue_free()
 		
-	for y in range(cellSize + 1):
-		var a := Vector3(0, boardHeight + 0.01, y * cellSize)
-		var b := Vector3(cellSize * cs, boardHeight + 0.01, y * cs)
-		get_viewport().debug_draw_line_3d(a, b, Color(0.1,0.8,1,0.5))
+		
+		
