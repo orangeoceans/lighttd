@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://dbbwofm4x2dk2"]
+
+[ext_resource type="Script" uid="uid://dljd0qc0rmoml" path="res://scenes/test_rays.gd" id="1_bstgu"]
+[ext_resource type="Script" uid="uid://ckme0c5dnbp8a" path="res://scripts/mirror.gd" id="1_cwbco"]
+
+[node name="TestRays" type="Node2D"]
+script = ExtResource("1_bstgu")
+
+[node name="Mirror" type="Line2D" parent="."]
+position = Vector2(100, 200)
+rotation = 0.785398
+points = PackedVector2Array(-2, -4)
+default_color = Color(0, 0, 0, 1)
+script = ExtResource("1_cwbco")
+length = 20.0
+
+[node name="Mirror2" type="Line2D" parent="."]
+position = Vector2(808, 202)
+rotation = 1.14843
+points = PackedVector2Array(-2, -4)
+default_color = Color(0, 0, 0, 1)
+script = ExtResource("1_cwbco")
+length = 40.0
+
+[node name="Light" type="Line2D" parent="."]
+position = Vector2(100, 0)
