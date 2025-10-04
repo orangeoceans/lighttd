@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://bawb02ci81455"]
+
+[ext_resource type="Script" uid="uid://b4vapxxfro0w7" path="res://scripts/board.gd" id="1_2venv"]
+
+[node name="testLevel" type="Node3D"]
+
+[node name="board" type="Node3D" parent="."]
+script = ExtResource("1_2venv")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.031189, -0.387695, -0.316284)
+size = Vector3(10.8712, 0.224609, 10.1765)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.031189, 0.174147, -0.316284)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.05114, 0.174147, -2.08334)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.56338, 0.174147, 1.98968)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.69125, 0.171094, -2.67621)
+
+[node name="enitities" type="Node3D" parent="."]
+
+[node name="utilities" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="utilities"]
+transform = Transform3D(-0.386497, -0.841569, -0.377335, -0.435016, -0.194416, 0.879183, -0.813253, 0.503949, -0.290955, -0.0398145, 0, 0)
+shadow_enabled = true

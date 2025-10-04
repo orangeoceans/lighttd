@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxw4uu7t6ck8q"]
+
+[ext_resource type="PackedScene" uid="uid://bawb02ci81455" path="res://scenes/test_level.tscn" id="1_yqjtg"]
+[ext_resource type="PackedScene" uid="uid://cr6nssg54kiew" path="res://scenes/cameraRig.tscn" id="2_lnu2h"]
+
+[node name="Game" type="Node"]
+
+[node name="testLevel" parent="." instance=ExtResource("1_yqjtg")]
+
+[node name="CameraRig" parent="." instance=ExtResource("2_lnu2h")]
+transform = Transform3D(0.707107, 0.408607, -0.577096, 0, 0.816138, 0.577858, 0.707107, -0.408607, 0.577096, -5, 4, 5)
+
+[node name="Camera3D" parent="CameraRig" index="0"]
+projection = 1
+size = 11.527
+near = 0.001
+
+[editable path="CameraRig"]

@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://3df665q7ym5g"]
+
+[ext_resource type="Script" uid="uid://bul5rcs50mrag" path="res://scripts/main_menu.gd" id="1_sl1te"]
+
+[node name="mainMenu" type="Node2D"]
+script = ExtResource("1_sl1te")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Start Game" type="Button" parent="CanvasLayer/Control"]
+layout_mode = 0
+offset_left = 89.0
+offset_top = 91.0
+offset_right = 210.0
+offset_bottom = 151.0
+focus_neighbor_top = NodePath("../Exit Game")
+focus_neighbor_bottom = NodePath("../Exit Game")
+text = "START"
+
+[node name="Exit Game" type="Button" parent="CanvasLayer/Control"]
+layout_mode = 0
+offset_left = 89.0
+offset_top = 169.0
+offset_right = 210.0
+offset_bottom = 229.0
+focus_neighbor_top = NodePath("../Start Game")
+focus_neighbor_bottom = NodePath("../Start Game")
+text = "EXIT"
+
+[connection signal="pressed" from="CanvasLayer/Control/Start Game" to="." method="_on_start_game_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/Exit Game" to="." method="_on_exit_game_pressed"]
