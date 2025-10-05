@@ -116,6 +116,12 @@ func setUpBoard(rows: Array) -> void:
 		Color(0.5, 0.0, 1.0),  # Purple
 	]
 	
+	var ray_color_names = ["Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple"]
+	
+	# Initialize collector beam counts
+	for color_name in ray_color_names:
+		Globals.collector_beam_counts[color_name] = 0
+	
 	# Create all light beams
 	for i in range(NUM_RAYS):
 		var light_beam := Node3D.new()
@@ -240,6 +246,9 @@ func setUpBoard(rows: Array) -> void:
 	scenePath.name = "EnemyPath"
 	scenePath.curve = curve
 	
+	# Place Collector tower near the goal
+	place_collector_tower(rows, goal, tiles_root)
+	
 	# Initialize beam starting positions and directions
 	var board_height = h * hex_size * 1.5
 	var beam_y = 0.5  # Slightly above ground
@@ -292,6 +301,45 @@ func _road_neighbors(p: Vector2i, rows: Array) -> Array[Vector2i]:
 				out.append(Vector2i(nc, nr))
 	return out
 
+func place_collector_tower(rows: Array, goal: Vector2i, tiles_root: Node3D) -> void:
+	# Only place if one doesn't already exist
+	if Globals.collector_tower_instance and is_instance_valid(Globals.collector_tower_instance):
+		return
+	
+	var w = rows[0].length()
+	var h := rows.size()
+	var r := goal.y
+	var c := goal.x
+	var odd := (r & 1) == 1
+	
+	# Get all neighbors around the goal
+	var deltas_even := [Vector2i(+1,0), Vector2i(0,-1), Vector2i(-1,-1), Vector2i(-1,0), Vector2i(-1,+1), Vector2i(0,+1)]
+	var deltas_odd  := [Vector2i(+1,0), Vector2i(+1,-1), Vector2i(0,-1), Vector2i(-1,0), Vector2i(0,+1), Vector2i(+1,+1)]
+	var deltas :=  deltas_odd if odd else deltas_even
+	
+	# Find a buildable tile (.) near the goal
+	var collector_tile = null
+	for d in deltas:
+		var nc = c + d.x
+		var nr = r + d.y
+		if nc >= 0 and nc < w and nr >= 0 and nr < h:
+			var ch := (rows[nr] as String)[nc]
+			if ch == '.':
+				# Find the actual tile node
+				for tile in tiles_root.get_children():
+					var tile_pos = _hex_center(nc, nr)
+					if tile.position.distance_to(tile_pos) < 0.1:
+						collector_tile = tile
+						break
+				if collector_tile:
+					break
+	
+	# Place collector tower if we found a suitable tile
+	if collector_tile:
+		for child in collector_tile.get_children():
+			if child.is_in_group("emptyTile"):
+				Globals.create_tower("collector", child)
+				break
 
 
 func update_light_ray(ray_index: int) -> void:
@@ -327,8 +375,17 @@ func update_light_ray(ray_index: int) -> void:
 			ray_widths.append(current_width)
 			ray_origin_xz = hit_info.position
 			
-			# Apply lens/mirror effect for next segment
-			if hit_info.tower_type == "convex_lens":
+			# Apply lens/mirror/collector effect for next segment
+			if hit_info.tower_type == "collector":
+				# Collector: absorb the beam (stop tracing)
+				# Increment the count for this beam color
+				var ray_color_names = ["Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple"]
+				if ray_index < ray_color_names.size():
+					var color_name = ray_color_names[ray_index]
+					Globals.collector_beam_counts[color_name] += 1
+					print("Collector absorbed ", color_name, " beam! Total counts: ", Globals.collector_beam_counts)
+				break
+			elif hit_info.tower_type == "convex_lens":
 				# Convex lens: narrow the beam instantly
 				current_width *= convex_lens_multiplier
 				current_width = clamp(current_width, min_beam_width, max_beam_width)
@@ -474,10 +531,17 @@ func update_light_beam(ray_index: int, points: PackedVector3Array, widths: Packe
 func _clear_kids() -> void: ### the IDF is interested in this one 
 	for child in get_children():
 		if is_instance_valid(scenePath) and child == scenePath:
-			# Optional: reset its curve so it’s clean for the next run
+			# Optional: reset its curve so it's clean for the next run
 			scenePath.curve = Curve3D.new()
 			continue
 		child.queue_free()
-		
-		
-		
+	
+	# Clear ray arrays
+	light_beam_meshes.clear()
+	beam_start_positions.clear()
+	beam_directions.clear()
+	beam_colors.clear()
+	
+	# Reset collector tower reference and beam counts
+	Globals.collector_tower_instance = null
+	Globals.collector_beam_counts.clear()

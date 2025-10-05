@@ -42,25 +42,6 @@ func get_selected_tower_type() -> String:
 		_:
 			return "mirror"
 
-func create_tower(tower_type: String, tile: Node):
-	print("PLACING ", tower_type)
-	var new_tower = null
-	match tower_type:
-		"convex_lens":
-			new_tower = Globals.convexLensTower.instantiate()
-			new_tower.add_to_group("tower_line")
-		"concave_lens":
-			new_tower = Globals.concaveLensTower.instantiate()
-			new_tower.add_to_group("tower_line")
-		_:
-			new_tower = Globals.mirrorTower.instantiate()
-			new_tower.add_to_group("tower_line")
-	tile.add_child(new_tower)
-	new_tower.global_position = tile.global_position + Vector3(0,0.2,0)
-	new_tower.rotation.y = TAU
-	new_tower.tower_type = tower_type
-	select_tower(new_tower)
-
 func handle_player_controls():	
 	if not Globals.cameraNode:
 		return
@@ -85,6 +66,7 @@ func handle_player_controls():
 
 	if Input.is_action_just_pressed("interact"):
 		if mouse_over_obj and mouse_over_obj.is_in_group("emptyTile"):
+			print(mouse_over_obj.get_children())
 			for child in mouse_over_obj.get_children():
 				if child.is_in_group("tower_line") and child is TowerLine:
 					cancel_dragging()
@@ -95,7 +77,7 @@ func handle_player_controls():
 			else:
 				# Get selected tower type from dropdown
 				var tower_type = get_selected_tower_type()
-				create_tower(tower_type, mouse_over_obj)
+				select_tower(Globals.create_tower(tower_type, mouse_over_obj))
 		elif mouse_over_obj is TowerLine:
 			cancel_dragging()
 			select_tower(mouse_over_obj)

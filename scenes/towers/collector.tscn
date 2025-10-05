@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://blixl817m1lld"]
+
+[ext_resource type="Script" uid="uid://buo3r1eabk0v5" path="res://scripts/tower_line.gd" id="1_w6v4q"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_tsx0o"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_4fw4h"]
+inner_radius = 1.135
+outer_radius = 1.315
+
+[node name="Tower" type="StaticBody3D"]
+script = ExtResource("1_w6v4q")
+rotation_speed = 0.0
+tower_type = "concave_lens"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.422611, 0, 0, 0, 1, 0, 0, 0)
+visible = false
+mesh = SubResource("BoxMesh_tsx0o")
+
+[node name="Lens2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.027474, 0.74991, 0, -0.523013, -0.039393, 0, 0, 0, 0.655484, 0, 1.69332, 0)
+mesh = SubResource("TorusMesh_4fw4h")
+skeleton = NodePath("../MeshInstance3D")
