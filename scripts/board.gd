@@ -41,7 +41,8 @@ var beam_direction: Vector2 = Vector2(1, 0)  # Shoots right in XZ plane
 var beam_start_position_2: Vector3
 var beam_direction_2: Vector2 = Vector2(0, 1)  # Shoots down in XZ plane
 var initial_beam_width: float = 0.3
-var lens_width_multiplier: float = 0.5  # Each lens narrows beam to 50% of current width
+var convex_lens_multiplier: float = 0.5  # Each convex lens narrows beam to 50% of current width
+var concave_lens_multiplier: float = 1.5  # Each concave lens widens beam to 150% of current width
 
 
 
@@ -333,8 +334,15 @@ func update_light_ray() -> void:
 			# Apply lens/mirror effect for next segment
 			if hit_info.tower_type == "convex_lens":
 				# Convex lens: narrow the beam instantly
-				current_width *= lens_width_multiplier
+				current_width *= convex_lens_multiplier
 				# Add duplicate point with new narrow width for instant transition
+				ray_points.append(hit_pos_3d)
+				ray_widths.append(current_width)
+				# Direction stays the same
+			elif hit_info.tower_type == "concave_lens":
+				# Concave lens: widen the beam instantly
+				current_width *= concave_lens_multiplier
+				# Add duplicate point with new wide width for instant transition
 				ray_points.append(hit_pos_3d)
 				ray_widths.append(current_width)
 				# Direction stays the same
@@ -385,8 +393,15 @@ func update_light_ray_2() -> void:
 			# Apply lens/mirror effect for next segment
 			if hit_info.tower_type == "convex_lens":
 				# Convex lens: narrow the beam instantly
-				current_width *= lens_width_multiplier
+				current_width *= convex_lens_multiplier
 				# Add duplicate point with new narrow width for instant transition
+				ray_points.append(hit_pos_3d)
+				ray_widths.append(current_width)
+				# Direction stays the same
+			elif hit_info.tower_type == "concave_lens":
+				# Concave lens: widen the beam instantly
+				current_width *= concave_lens_multiplier
+				# Add duplicate point with new wide width for instant transition
 				ray_points.append(hit_pos_3d)
 				ray_widths.append(current_width)
 				# Direction stays the same
