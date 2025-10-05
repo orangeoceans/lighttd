@@ -1,9 +1,6 @@
 
 extends Node3D
-
 class_name Board
-
-
 
 ###
 
@@ -30,22 +27,13 @@ var canSpawnEnemiesCooldown : bool = true;
 
 @onready var camera = Globals.cameraNode
 
+@onready var beam : PackedScene = preload("res://scenes/beam.tscn")
+
 # Light ray system - support for 7 rays
 const NUM_RAYS: int = 7
-var light_beam_meshes: Array[ImmediateMesh] = []
+var beams: Array[Beam] = []  # Store all beam instances
 var beam_start_positions: Array[Vector3] = []
 var beam_directions: Array[Vector2] = []
-var beam_colors: Array[Color] = []
-
-# Light ray tracing variables
-var max_ray_length: float = 2000.0
-var max_bounces: int = 20
-var initial_beam_width: float = 0.3
-var min_beam_width: float = 0.05  # Minimum beam width (never thinner)
-var max_beam_width: float = 1.2  # Maximum beam width (never wider)
-var convex_lens_multiplier: float = 0.5  # Each convex lens narrows beam to 50% of current width
-var concave_lens_multiplier: float = 1.5  # Each concave lens widens beam to 150% of current width
-
 
 
 func _ready() -> void:
@@ -68,13 +56,6 @@ func _ready() -> void:
 
 func _process (_delta):
 	spawner()
-	# Update all light rays
-	for i in range(NUM_RAYS):
-		update_light_ray(i)
-
-
-
-
 
 func spawner() -> void:
 	if enemiesToSpawn > 0 and canSpawnEnemiesCooldown:
@@ -95,8 +76,6 @@ func spawner() -> void:
 func _on_spawn_timer_timeout() -> void:
 	canSpawnEnemiesCooldown = true
 
-
-
 	
 func setUpBoard(rows: Array) -> void:
 	_clear_kids()
@@ -115,39 +94,8 @@ func setUpBoard(rows: Array) -> void:
 		Color(0.0, 0.0, 1.0),  # Blue
 		Color(0.5, 0.0, 1.0),  # Purple
 	]
-	
-	var ray_color_names = ["Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple"]
-	
-	# Initialize collector beam counts
-	for color_name in ray_color_names:
-		Globals.collector_beam_counts[color_name] = 0
-	
-	# Create all light beams
-	for i in range(NUM_RAYS):
-		var light_beam := Node3D.new()
-		light_beam.name = "LightBeam" + str(i)
-		
-		var beam_line := MeshInstance3D.new()
-		beam_line.name = "BeamLine" + str(i)
-		
-		var mesh := ImmediateMesh.new()
-		beam_line.mesh = mesh
-		
-		var ray_color = ray_colors[i]
-		var material := StandardMaterial3D.new()
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.albedo_color = ray_color
-		material.emission_enabled = true
-		material.emission = ray_color
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.vertex_color_use_as_albedo = true
-		beam_line.material_override = material
-		
-		light_beam.add_child(beam_line)
-		add_child(light_beam)
-		light_beam_meshes.append(mesh)
-		beam_colors.append(ray_color)
+
+	var beam_keys = [KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_H, KEY_J]
 
 	var w = rows[0].length()
 	var h := rows.size()
@@ -249,23 +197,18 @@ func setUpBoard(rows: Array) -> void:
 	# Place Collector tower near the goal
 	place_collector_tower(rows, goal, tiles_root)
 	
-	# Initialize beam starting positions and directions
-	var board_height = h * hex_size * 1.5
-	var beam_y = 0.5  # Slightly above ground
-	
-	# Distribute rays evenly across the left edge, shooting right
-	var spacing_vertical = board_height / float(NUM_RAYS + 1)
+	# Create all light beams
 	for i in range(NUM_RAYS):
-		# Start from left side, evenly spaced vertically
+		var board_height = rows.size() * hex_size * 1.5
+		var beam_y = 0.5  # Slightly above ground
+		var spacing_vertical = board_height / float(NUM_RAYS + 1)
 		var start_z = spacing_vertical * (i + 1)
-		beam_start_positions.append(Vector3(0.0, beam_y, start_z))
-		# All shoot to the right initially
-		beam_directions.append(Vector2(1, 0))
-	
-	# Initial beams will be updated by ray tracing
-	for i in range(NUM_RAYS):
-		update_light_ray(i)
-	
+		var ray_color = ray_colors[i]
+
+		var beam_instance := beam.instantiate()
+		beam_instance.initialize(self, ray_color, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[i])
+		add_child(beam_instance)
+		beams.append(beam_instance)
 	
 	
 # ===== Helpers: pointy-top, odd-r layout =====
@@ -342,192 +285,6 @@ func place_collector_tower(rows: Array, goal: Vector2i, tiles_root: Node3D) -> v
 				break
 
 
-func update_light_ray(ray_index: int) -> void:
-	if ray_index < 0 or ray_index >= NUM_RAYS:
-		return
-	if ray_index >= light_beam_meshes.size():
-		return
-	
-	var ray_points := PackedVector3Array()
-	var ray_widths := PackedFloat32Array()
-	var beam_start = beam_start_positions[ray_index]
-	var ray_origin_xz = Vector2(beam_start.x, beam_start.z)
-	var ray_direction = beam_directions[ray_index]
-	var remaining_length = max_ray_length
-	var current_width = initial_beam_width
-	
-	ray_points.append(beam_start)
-	ray_widths.append(current_width)
-	
-	for bounce in range(max_bounces):
-		if remaining_length <= 0:
-			break
-		
-		var hit_info = cast_ray(ray_origin_xz, ray_direction, remaining_length)
-		
-		if not hit_info.is_empty():
-			var distance_2d = ray_origin_xz.distance_to(hit_info.position)
-			remaining_length -= distance_2d
-			
-			# Add hit point with current width (before lens effect)
-			var hit_pos_3d = Vector3(hit_info.position.x, beam_start.y, hit_info.position.y)
-			ray_points.append(hit_pos_3d)
-			ray_widths.append(current_width)
-			ray_origin_xz = hit_info.position
-			
-			# Apply lens/mirror/collector effect for next segment
-			if hit_info.tower_type == "collector":
-				# Collector: absorb the beam (stop tracing)
-				# Increment the count for this beam color
-				var ray_color_names = ["Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple"]
-				if ray_index < ray_color_names.size():
-					var color_name = ray_color_names[ray_index]
-					Globals.collector_beam_counts[color_name] += 1
-					print("Collector absorbed ", color_name, " beam! Total counts: ", Globals.collector_beam_counts)
-				break
-			elif hit_info.tower_type == "convex_lens":
-				# Convex lens: narrow the beam instantly
-				current_width *= convex_lens_multiplier
-				current_width = clamp(current_width, min_beam_width, max_beam_width)
-				# Add duplicate point with new narrow width for instant transition
-				ray_points.append(hit_pos_3d)
-				ray_widths.append(current_width)
-				# Direction stays the same
-			elif hit_info.tower_type == "concave_lens":
-				# Concave lens: widen the beam instantly
-				current_width *= concave_lens_multiplier
-				current_width = clamp(current_width, min_beam_width, max_beam_width)
-				# Add duplicate point with new wide width for instant transition
-				ray_points.append(hit_pos_3d)
-				ray_widths.append(current_width)
-				# Direction stays the same
-			else:
-				# Mirror: reflect the ray
-				var dot_product = ray_direction.dot(hit_info.normal)
-				ray_direction = ray_direction - 2 * dot_product * hit_info.normal
-				ray_direction = ray_direction.normalized()
-		else:
-			# No hit, extend to max length
-			var end_xz = ray_origin_xz + ray_direction * remaining_length
-			ray_points.append(Vector3(end_xz.x, beam_start.y, end_xz.y))
-			ray_widths.append(current_width)
-			break
-	
-	update_light_beam(ray_index, ray_points, ray_widths)
-
-
-func cast_ray(origin: Vector2, direction: Vector2, max_distance: float) -> Dictionary:
-	var closest_hit = {}
-	var closest_distance = max_distance
-	
-	# Check all TowerLine nodes in the scene tree
-	for child in get_tree().get_nodes_in_group("tower_line"):
-		if child is TowerLine:
-			var hit = ray_line_intersection(origin, direction, max_distance, child.start_point, child.end_point)
-			if hit and hit.has("distance") and hit.distance < closest_distance:
-				closest_distance = hit.distance
-				closest_hit = hit
-				# Add tower type to hit info
-				closest_hit["tower_type"] = child.tower_type
-	
-	return closest_hit
-
-func ray_line_intersection(ray_origin: Vector2, ray_dir: Vector2, max_dist: float, line_start: Vector2, line_end: Vector2) -> Dictionary:
-	# Ray: P = ray_origin + t * ray_dir
-	# Line segment: Q = line_start + s * (line_end - line_start), where 0 <= s <= 1
-	
-	var line_vec = line_end - line_start
-	var line_to_ray = ray_origin - line_start
-	
-	var cross_dir_line = ray_dir.cross(line_vec)
-	if abs(cross_dir_line) < 0.0001:
-		return {}  # Parallel or collinear
-	
-	var t = line_vec.cross(line_to_ray) / cross_dir_line
-	var s = ray_dir.cross(line_to_ray) / cross_dir_line
-	
-	if t > 0.0001 and t <= max_dist and s >= 0 and s <= 1:
-		var hit_position = ray_origin + ray_dir * t
-		# Calculate perpendicular to line segment
-		var normal = Vector2(-line_vec.y, line_vec.x).normalized()
-		# Flip normal to point away from incoming ray (match 2D working version)
-		if normal.dot(ray_dir) < 0:
-			normal = -normal
-		
-		return {
-			"position": hit_position,
-			"normal": normal,
-			"distance": t
-		}
-	
-	return {}
-
-func update_light_beam(ray_index: int, points: PackedVector3Array, widths: PackedFloat32Array) -> void:
-	if ray_index < 0 or ray_index >= NUM_RAYS:
-		return
-	if ray_index >= light_beam_meshes.size():
-		return
-	
-	var mesh = light_beam_meshes[ray_index]
-	if mesh == null:
-		return
-	
-	mesh.clear_surfaces()
-	
-	if points.size() < 2:
-		return
-	
-	# Draw beam as triangles to show thickness
-	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-	
-	var ray_color = beam_colors[ray_index]
-	
-	for i in range(points.size() - 1):
-		var p1 = points[i]
-		var p2 = points[i + 1]
-		var direction = (p2 - p1).normalized()
-		
-		# Use width at each point for tapering effect
-		var width1 = widths[i] if i < widths.size() else initial_beam_width
-		var width2 = widths[i + 1] if (i + 1) < widths.size() else initial_beam_width
-		
-		# Calculate alpha based on width (wider = more transparent)
-		# Map width to alpha: narrower beams are more opaque, wider beams are more transparent
-		var width_ratio1 = width1 / max_beam_width
-		var width_ratio2 = width2 / max_beam_width
-		var alpha1 = clamp(1.0 - width_ratio1 * 0.6, 0.2, 1.0)
-		var alpha2 = clamp(1.0 - width_ratio2 * 0.6, 0.2, 1.0)
-		var color1 = Color(ray_color.r, ray_color.g, ray_color.b, alpha1)
-		var color2 = Color(ray_color.r, ray_color.g, ray_color.b, alpha2)
-		
-		# Create perpendicular for width (use up vector)
-		var perp1 = Vector3(0, 1, 0).cross(direction).normalized() * width1
-		var perp2 = Vector3(0, 1, 0).cross(direction).normalized() * width2
-		
-		# Create quad as two triangles with varying width
-		var v1 = p1 + perp1
-		var v2 = p1 - perp1
-		var v3 = p2 + perp2
-		var v4 = p2 - perp2
-		
-		# Triangle 1 with vertex colors
-		mesh.surface_set_color(color1)
-		mesh.surface_add_vertex(v1)
-		mesh.surface_set_color(color1)
-		mesh.surface_add_vertex(v2)
-		mesh.surface_set_color(color2)
-		mesh.surface_add_vertex(v3)
-		
-		# Triangle 2 with vertex colors
-		mesh.surface_set_color(color1)
-		mesh.surface_add_vertex(v2)
-		mesh.surface_set_color(color2)
-		mesh.surface_add_vertex(v4)
-		mesh.surface_set_color(color2)
-		mesh.surface_add_vertex(v3)
-	
-	mesh.surface_end()
-
 func _clear_kids() -> void: ### the IDF is interested in this one 
 	for child in get_children():
 		if is_instance_valid(scenePath) and child == scenePath:
@@ -537,10 +294,9 @@ func _clear_kids() -> void: ### the IDF is interested in this one
 		child.queue_free()
 	
 	# Clear ray arrays
-	light_beam_meshes.clear()
+	beams.clear()
 	beam_start_positions.clear()
 	beam_directions.clear()
-	beam_colors.clear()
 	
 	# Reset collector tower reference and beam counts
 	Globals.collector_tower_instance = null

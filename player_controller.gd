@@ -3,6 +3,8 @@ extends Node3D
 # Player input and tower interaction controller
 
 @export var hud: Control
+@export var level: Level
+@export var max_active_beams: int = 2  # Maximum number of beams that can be active at once
 
 # State tracking
 var right_mouse_was_pressed: bool = false
@@ -11,6 +13,9 @@ var drag_offset: Vector3 = Vector3.ZERO
 var original_parent: Node = null
 
 var selected_tower: TowerLine = null
+
+# Beam activation tracking
+var active_beams: Array[Beam] = []  # Currently active beams
 
 # UI References
 var tower_option_dropdown: OptionButton = null
@@ -25,6 +30,7 @@ func _ready():
 		print("WARNING: HUD reference not set in PlayerController")
 
 func _process(_delta: float) -> void:
+	handle_beam_activation()
 	handle_player_controls()
 
 func get_selected_tower_type() -> String:
@@ -41,6 +47,47 @@ func get_selected_tower_type() -> String:
 			return "convex_lens"
 		_:
 			return "mirror"
+
+func handle_beam_activation() -> void:
+	if not level:
+		return
+	
+	# Get board from level
+	var board = level.board
+	if not board:
+		return
+	
+	var all_beams = board.beams
+	if all_beams.is_empty():
+		return
+
+	# Check for key presses and toggle beam activation
+	for i in range(all_beams.size()):
+		var beam = all_beams[i]
+		if not is_instance_valid(beam):
+			continue
+		
+		# Check if this beam's key is pressed
+		if Input.is_key_pressed(beam.key):
+			# Try to activate this beam
+			if not beam.is_active:
+				# Check if we're at the limit
+				if active_beams.size() >= max_active_beams:
+					# Deactivate oldest beam
+					var oldest_beam = active_beams[0]
+					oldest_beam.is_active = false
+					active_beams.erase(oldest_beam)
+				
+				# Activate this beam
+				beam.is_active = true
+				active_beams.append(beam)
+				print("Beam ", i, " (", char(beam.key), ") activated")
+		else:
+			# Key not pressed, deactivate this beam
+			if beam.is_active:
+				beam.is_active = false
+				active_beams.erase(beam)
+				print("Beam ", i, " (", char(beam.key), ") deactivated")
 
 func handle_player_controls():	
 	if not Globals.cameraNode:

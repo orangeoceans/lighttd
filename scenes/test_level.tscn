@@ -7,8 +7,9 @@
 
 [sub_resource type="Curve3D" id="Curve3D_qcd3b"]
 
-[node name="testLevel" type="Node3D"]
+[node name="Level" type="Node3D" node_paths=PackedStringArray("board")]
 script = ExtResource("1_tmr53")
+board = NodePath("board")
 
 [node name="board" type="Node3D" parent="."]
 script = ExtResource("1_2venv")

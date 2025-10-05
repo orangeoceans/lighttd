@@ -7,11 +7,12 @@
 
 [node name="Game" type="Node"]
 
-[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud")]
+[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level")]
 script = ExtResource("4_lbhrr")
 hud = NodePath("../HUD")
+level = NodePath("../Level")
 
-[node name="testLevel" parent="." instance=ExtResource("1_yqjtg")]
+[node name="Level" parent="." instance=ExtResource("1_yqjtg")]
 
 [node name="CameraRig" parent="." instance=ExtResource("2_lnu2h")]
 transform = Transform3D(0.707107, 0.408607, -0.577096, 0, 0.816138, 0.577858, 0.707107, -0.408607, 0.577096, 0.408063, 11.5441, 15.5268)
