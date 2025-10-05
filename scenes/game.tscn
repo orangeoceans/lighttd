@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://bxw4uu7t6ck8q"]
+[gd_scene load_steps=6 format=3 uid="uid://bxw4uu7t6ck8q"]
 
 [ext_resource type="PackedScene" uid="uid://bawb02ci81455" path="res://scenes/test_level.tscn" id="1_yqjtg"]
 [ext_resource type="PackedScene" uid="uid://cr6nssg54kiew" path="res://scenes/cameraRig.tscn" id="2_lnu2h"]
 [ext_resource type="Script" uid="uid://b6savkug2uynt" path="res://hud.gd" id="3_lnu2h"]
 [ext_resource type="Script" uid="uid://xuspw0deuucj" path="res://player_controller.gd" id="4_lbhrr"]
+[ext_resource type="Script" uid="uid://dobt6ny1q5mbi" path="res://scripts/color_ratio_container.gd" id="5_iywne"]
 
 [node name="Game" type="Node"]
 
@@ -72,5 +73,18 @@ layout_mode = 0
 offset_right = 221.0
 offset_bottom = 23.0
 text = "Rotation"
+
+[node name="BottomBar" type="Control" parent="HUD"]
+anchors_preset = 0
+offset_left = 11.0
+offset_top = 306.0
+offset_right = 51.0
+offset_bottom = 346.0
+
+[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/BottomBar"]
+layout_mode = 0
+offset_right = 210.0
+offset_bottom = 34.0
+script = ExtResource("5_iywne")
 
 [editable path="CameraRig"]

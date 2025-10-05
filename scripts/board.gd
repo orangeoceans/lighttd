@@ -18,7 +18,7 @@ class_name Board
 
 @onready var basicEnemy : PackedScene = preload("res://scenes/enemies/basicEnemy.tscn")
 
-var enemiesToSpawn : int = 3 ### number of enemies to spawn per round
+var enemiesToSpawn : int = 30 ### number of enemies to spawn per round
 
 var canSpawnEnemiesCooldown : bool = true; 
 
@@ -84,17 +84,6 @@ func setUpBoard(rows: Array) -> void:
 	tiles_root.name = "Tiles"
 	add_child(tiles_root)
 	
-	# Define colors for each ray (rainbow spectrum)
-	var ray_colors = [
-		Color(1.0, 0.0, 0.0),  # Red
-		Color(1.0, 0.5, 0.0),  # Orange
-		Color(1.0, 1.0, 0.0),  # Yellow
-		Color(0.0, 1.0, 0.0),  # Green
-		Color(0.0, 1.0, 1.0),  # Cyan
-		Color(0.0, 0.0, 1.0),  # Blue
-		Color(0.5, 0.0, 1.0),  # Purple
-	]
-
 	var beam_keys = [KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_H, KEY_J]
 
 	var w = rows[0].length()
@@ -203,10 +192,10 @@ func setUpBoard(rows: Array) -> void:
 		var beam_y = 0.5  # Slightly above ground
 		var spacing_vertical = board_height / float(NUM_RAYS + 1)
 		var start_z = spacing_vertical * (i + 1)
-		var ray_color = ray_colors[i]
+		var beam_color_enum = i as Globals.BeamColor  # Use enum index
 
 		var beam_instance := beam.instantiate()
-		beam_instance.initialize(self, ray_color, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[i])
+		beam_instance.initialize(self, beam_color_enum, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[i])
 		add_child(beam_instance)
 		beams.append(beam_instance)
 	
@@ -301,3 +290,9 @@ func _clear_kids() -> void: ### the IDF is interested in this one
 	# Reset collector tower reference and beam counts
 	Globals.collector_tower_instance = null
 	Globals.collector_beam_counts.clear()
+	
+	# Initialize all beam colors to equal values
+	var equal_value = Globals.collector_total_count / 7.0
+	for i in range(Globals.BeamColor.size()):
+		var beam_color_enum = i as Globals.BeamColor
+		Globals.collector_beam_counts[beam_color_enum] = equal_value

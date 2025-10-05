@@ -38,13 +38,14 @@ func _process(delta: float) -> void:
 		apply_beam_damage_to_enemies(delta)
 		time_elapsed += delta
 
-func initialize(board: Board, color : Color, position: Vector3, direction: Vector2, key: int):
-	print("Initializing beam with color: ", color)
+func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vector3, direction: Vector2, key: int):
+	print("Initializing beam with color enum: ", beam_color_enum)
 	self.board = board
-	self.color = color
+	self.color = Globals.get_beam_color(beam_color_enum)
 	self.key = key
-	if color not in Globals.collector_beam_counts:
-		Globals.collector_beam_counts[color] = 0
+	
+	# Store the color enum for later use
+	set_meta("beam_color_enum", beam_color_enum)
 
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -162,8 +163,9 @@ func update_light_path() -> void:
 				# Collector: absorb the beam (stop tracing)
 				# Only increment count if this is the active beam
 				if is_active:
-					Globals.collector_beam_counts[color] += 1
-					print("Collector absorbed ", color, " beam! Total counts: ", Globals.collector_beam_counts)
+					var beam_color_enum = get_meta("beam_color_enum")
+					Globals.increment_beam_count(beam_color_enum, 1.0)
+					# print("Collector absorbed ", beam_color_enum, " beam! Total counts: ", Globals.collector_beam_counts)
 				break
 			elif hit_info.tower_type == "convex_lens":
 				# Convex lens: narrow the beam instantly
