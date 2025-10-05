@@ -2,6 +2,8 @@ extends Node3D
 
 # Player input and tower interaction controller
 
+@export var hud: Control
+
 # State tracking
 var right_mouse_was_pressed: bool = false
 var dragging_tower: TowerLine = null
@@ -10,34 +12,54 @@ var original_parent: Node = null
 
 var selected_tower: TowerLine = null
 
+# UI References
+var tower_option_dropdown: OptionButton = null
+
+func _ready():
+	# Find the tower type dropdown from HUD
+	if hud:
+		tower_option_dropdown = hud.get_node_or_null("TowerBar/TowerOption")
+		if not tower_option_dropdown:
+			print("WARNING: TowerOption dropdown not found in HUD")
+	else:
+		print("WARNING: HUD reference not set in PlayerController")
+
 func _process(_delta: float) -> void:
 	handle_player_controls()
+
+func get_selected_tower_type() -> String:
+	if not tower_option_dropdown:
+		return "mirror" 
+	
+	var selected_idx = tower_option_dropdown.selected
+	match selected_idx:
+		0:
+			return "mirror"
+		1:
+			return "convex_lens"
+		2:
+			return "concave_lens"
+		_:
+			return "mirror"
 
 func create_tower(tower_type: String, tile: Node):
 	print("PLACING ", tower_type)
 	var new_tower = null
-	if tower_type == "convex_lens":
-		new_tower = Globals.convexLensTower.instantiate()
-		new_tower.add_to_group("tower_line")
-	elif tower_type == "concave_lens":
-		new_tower = Globals.concaveLensTower.instantiate()
-		new_tower.add_to_group("tower_line")
-	else:
-		new_tower = Globals.mirrorTower.instantiate()
-		new_tower.add_to_group("tower_line")
+	match tower_type:
+		"convex_lens":
+			new_tower = Globals.convexLensTower.instantiate()
+			new_tower.add_to_group("tower_line")
+		"concave_lens":
+			new_tower = Globals.concaveLensTower.instantiate()
+			new_tower.add_to_group("tower_line")
+		_:
+			new_tower = Globals.mirrorTower.instantiate()
+			new_tower.add_to_group("tower_line")
 	tile.add_child(new_tower)
 	new_tower.global_position = tile.global_position + Vector3(0,0.2,0)
 	new_tower.rotation.y = TAU
 	new_tower.tower_type = tower_type
 	select_tower(new_tower)
-
-func switch_lens_type(tower: TowerLine):
-	if tower.tower_type == "convex_lens":
-		tower.tower_type = "concave_lens"
-		print("SWITCHED TO CONCAVE LENS")
-	elif tower.tower_type == "concave_lens":
-		tower.tower_type = "convex_lens"
-		print("SWITCHED TO CONVEX LENS")
 
 func handle_player_controls():	
 	if not Globals.cameraNode:
@@ -71,7 +93,9 @@ func handle_player_controls():
 			if dragging_tower:
 				stop_dragging(mouse_over_obj)
 			else:
-				create_tower("mirror", mouse_over_obj)
+				# Get selected tower type from dropdown
+				var tower_type = get_selected_tower_type()
+				create_tower(tower_type, mouse_over_obj)
 		elif mouse_over_obj is TowerLine:
 			cancel_dragging()
 			select_tower(mouse_over_obj)
@@ -80,14 +104,6 @@ func handle_player_controls():
 	elif Input.is_action_just_pressed("interact_2"):
 		if dragging_tower:
 			cancel_dragging()
-		elif mouse_over_obj and mouse_over_obj.is_in_group("emptyTile"):
-			for child in mouse_over_obj.get_children():
-				if child.is_in_group("tower_line") and child is TowerLine:
-					switch_lens_type(child)
-					return
-			create_tower("convex_lens", mouse_over_obj)
-		elif mouse_over_obj is TowerLine:
-			switch_lens_type(mouse_over_obj)
 		return
 	
 	elif Input.is_action_just_pressed("toggle_move"):
