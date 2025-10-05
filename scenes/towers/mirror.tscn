@@ -1,13 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://bmwk7rv2x7uid"]
 
-[ext_resource type="Script" uid="uid://buo3r1eabk0v5" path="res://scenes/towers/tower_mirror.gd" id="1_by3tn"]
+[ext_resource type="Script" uid="uid://buo3r1eabk0v5" path="res://scripts/tower_line.gd" id="1_wuuii"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_tsx0o"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_by3tn"]
 
 [node name="Tower" type="StaticBody3D"]
-script = ExtResource("1_by3tn")
+script = ExtResource("1_wuuii")
+rotation_speed = 0.1
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.422611, 0, 0, 0, 1, 0, 0, 0)

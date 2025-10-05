@@ -1,5 +1,5 @@
 extends StaticBody3D
-class_name TowerMirror
+class_name TowerLine
 
 @export var length: float = 1.0:
 	set(value):
@@ -7,6 +7,7 @@ class_name TowerMirror
 		update_endpoints()
 
 @export var rotation_speed: float = 0.5  # Radians per second
+@export var tower_type: String = "mirror"
 
 # Start and end points in XZ plane (Vector2 represents X and Z coordinates)
 var start_point: Vector2

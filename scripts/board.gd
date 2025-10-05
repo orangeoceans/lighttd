@@ -26,7 +26,7 @@ var enemiesToSpawn : int = 3 ### number of enemies to spawn per round
 var canSpawnEnemiesCooldown : bool = true; 
 
 @onready var spawn_timer: Timer = $"../utilities/spawnTimer"
-@onready var mirrorTower : PackedScene = preload("res://scenes/towers/tower.tscn")
+@onready var mirrorTower : PackedScene = preload("res://scenes/towers/mirror.tscn")
 
 @onready var camera = Globals.cameraNode
 
@@ -40,6 +40,8 @@ var beam_start_position: Vector3
 var beam_direction: Vector2 = Vector2(1, 0)  # Shoots right in XZ plane
 var beam_start_position_2: Vector3
 var beam_direction_2: Vector2 = Vector2(0, 1)  # Shoots down in XZ plane
+var initial_beam_width: float = 0.3
+var lens_width_multiplier: float = 0.5  # Each lens narrows beam to 50% of current width
 
 
 
@@ -114,6 +116,9 @@ func setUpBoard(rows: Array) -> void:
 	material.albedo_color = Color(1, 1, 0, 1)  # Yellow light
 	material.emission_enabled = true
 	material.emission = Color(1, 1, 0, 1)
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED  # Render both sides
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.vertex_color_use_as_albedo = true  # Use vertex colors for transparency
 	beam_line.material_override = material
 	
 	light_beam.add_child(beam_line)
@@ -135,6 +140,9 @@ func setUpBoard(rows: Array) -> void:
 	material_2.albedo_color = Color(0, 1, 1, 1)  # Cyan light
 	material_2.emission_enabled = true
 	material_2.emission = Color(0, 1, 1, 1)
+	material_2.cull_mode = BaseMaterial3D.CULL_DISABLED  # Render both sides
+	material_2.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material_2.vertex_color_use_as_albedo = true  # Use vertex colors for transparency
 	beam_line_2.material_override = material_2
 	
 	light_beam_2.add_child(beam_line_2)
@@ -297,11 +305,14 @@ func update_light_ray() -> void:
 		return
 	
 	var ray_points := PackedVector3Array()
+	var ray_widths := PackedFloat32Array()  # Width at each point
 	var ray_origin_xz = Vector2(beam_start_position.x, beam_start_position.z)
 	var ray_direction = beam_direction
 	var remaining_length = max_ray_length
+	var current_width = initial_beam_width
 	
 	ray_points.append(beam_start_position)
+	ray_widths.append(current_width)
 	
 	for bounce in range(max_bounces):
 		if remaining_length <= 0:
@@ -310,35 +321,50 @@ func update_light_ray() -> void:
 		var hit_info = cast_ray(ray_origin_xz, ray_direction, remaining_length)
 		
 		if not hit_info.is_empty():
-			# Hit a mirror
-			var hit_pos_3d = Vector3(hit_info.position.x, beam_start_position.y, hit_info.position.y)
-			ray_points.append(hit_pos_3d)
 			var distance_2d = ray_origin_xz.distance_to(hit_info.position)
 			remaining_length -= distance_2d
 			
-			# Reflect the ray manually
+			# Add hit point with current width (before lens effect)
+			var hit_pos_3d = Vector3(hit_info.position.x, beam_start_position.y, hit_info.position.y)
+			ray_points.append(hit_pos_3d)
+			ray_widths.append(current_width)
 			ray_origin_xz = hit_info.position
-			var dot_product = ray_direction.dot(hit_info.normal)
-			ray_direction = ray_direction - 2 * dot_product * hit_info.normal
-			ray_direction = ray_direction.normalized()
+			
+			# Apply lens/mirror effect for next segment
+			if hit_info.tower_type == "convex_lens":
+				# Convex lens: narrow the beam instantly
+				current_width *= lens_width_multiplier
+				# Add duplicate point with new narrow width for instant transition
+				ray_points.append(hit_pos_3d)
+				ray_widths.append(current_width)
+				# Direction stays the same
+			else:
+				# Mirror: reflect the ray
+				var dot_product = ray_direction.dot(hit_info.normal)
+				ray_direction = ray_direction - 2 * dot_product * hit_info.normal
+				ray_direction = ray_direction.normalized()
 		else:
 			# No hit, extend to max length
 			var end_xz = ray_origin_xz + ray_direction * remaining_length
 			ray_points.append(Vector3(end_xz.x, beam_start_position.y, end_xz.y))
+			ray_widths.append(current_width)
 			break
 	
-	update_light_beam(ray_points)
+	update_light_beam(ray_points, ray_widths)
 
 func update_light_ray_2() -> void:
 	if light_beam_mesh_2 == null:
 		return
 	
 	var ray_points := PackedVector3Array()
+	var ray_widths := PackedFloat32Array()  # Width at each point
 	var ray_origin_xz = Vector2(beam_start_position_2.x, beam_start_position_2.z)
 	var ray_direction = beam_direction_2
 	var remaining_length = max_ray_length
+	var current_width = initial_beam_width
 	
 	ray_points.append(beam_start_position_2)
+	ray_widths.append(current_width)
 	
 	for bounce in range(max_bounces):
 		if remaining_length <= 0:
@@ -347,36 +373,50 @@ func update_light_ray_2() -> void:
 		var hit_info = cast_ray(ray_origin_xz, ray_direction, remaining_length)
 		
 		if not hit_info.is_empty():
-			# Hit a mirror
-			var hit_pos_3d = Vector3(hit_info.position.x, beam_start_position_2.y, hit_info.position.y)
-			ray_points.append(hit_pos_3d)
 			var distance_2d = ray_origin_xz.distance_to(hit_info.position)
 			remaining_length -= distance_2d
 			
-			# Reflect the ray manually
+			# Add hit point with current width (before lens effect)
+			var hit_pos_3d = Vector3(hit_info.position.x, beam_start_position_2.y, hit_info.position.y)
+			ray_points.append(hit_pos_3d)
+			ray_widths.append(current_width)
 			ray_origin_xz = hit_info.position
-			var dot_product = ray_direction.dot(hit_info.normal)
-			ray_direction = ray_direction - 2 * dot_product * hit_info.normal
-			ray_direction = ray_direction.normalized()
+			
+			# Apply lens/mirror effect for next segment
+			if hit_info.tower_type == "convex_lens":
+				# Convex lens: narrow the beam instantly
+				current_width *= lens_width_multiplier
+				# Add duplicate point with new narrow width for instant transition
+				ray_points.append(hit_pos_3d)
+				ray_widths.append(current_width)
+				# Direction stays the same
+			else:
+				# Mirror: reflect the ray
+				var dot_product = ray_direction.dot(hit_info.normal)
+				ray_direction = ray_direction - 2 * dot_product * hit_info.normal
+				ray_direction = ray_direction.normalized()
 		else:
 			# No hit, extend to max length
 			var end_xz = ray_origin_xz + ray_direction * remaining_length
 			ray_points.append(Vector3(end_xz.x, beam_start_position_2.y, end_xz.y))
+			ray_widths.append(current_width)
 			break
 	
-	update_light_beam_2(ray_points)
+	update_light_beam_2(ray_points, ray_widths)
 
 func cast_ray(origin: Vector2, direction: Vector2, max_distance: float) -> Dictionary:
 	var closest_hit = {}
 	var closest_distance = max_distance
 	
-	# Check all TowerMirror nodes in the scene tree
-	for child in get_tree().get_nodes_in_group("tower_mirror"):
-		if child is TowerMirror:
+	# Check all TowerLine nodes in the scene tree
+	for child in get_tree().get_nodes_in_group("tower_line"):
+		if child is TowerLine:
 			var hit = ray_line_intersection(origin, direction, max_distance, child.start_point, child.end_point)
 			if hit and hit.has("distance") and hit.distance < closest_distance:
 				closest_distance = hit.distance
 				closest_hit = hit
+				# Add tower type to hit info
+				closest_hit["tower_type"] = child.tower_type
 	
 	return closest_hit
 
@@ -410,7 +450,7 @@ func ray_line_intersection(ray_origin: Vector2, ray_dir: Vector2, max_dist: floa
 	
 	return {}
 
-func update_light_beam(points: PackedVector3Array) -> void:
+func update_light_beam(points: PackedVector3Array, widths: PackedFloat32Array) -> void:
 	if light_beam_mesh == null:
 		return
 	
@@ -419,12 +459,53 @@ func update_light_beam(points: PackedVector3Array) -> void:
 	if points.size() < 2:
 		return
 	
-	light_beam_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
-	for point in points:
-		light_beam_mesh.surface_add_vertex(point)
+	# Draw beam as triangles to show thickness
+	light_beam_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	
+	for i in range(points.size() - 1):
+		var p1 = points[i]
+		var p2 = points[i + 1]
+		var direction = (p2 - p1).normalized()
+		
+		# Use width at each point for tapering effect
+		var width1 = widths[i] if i < widths.size() else initial_beam_width
+		var width2 = widths[i + 1] if (i + 1) < widths.size() else initial_beam_width
+		
+		# Calculate alpha based on width (wider = more transparent)
+		var alpha1 = clamp(1.0 - (width1 / initial_beam_width) * 0.4, 0.3, 1.0)
+		var alpha2 = clamp(1.0 - (width2 / initial_beam_width) * 0.4, 0.3, 1.0)
+		var color1 = Color(1, 1, 0, alpha1)
+		var color2 = Color(1, 1, 0, alpha2)
+		
+		# Create perpendicular for width (use up vector)
+		var perp1 = Vector3(0, 1, 0).cross(direction).normalized() * width1
+		var perp2 = Vector3(0, 1, 0).cross(direction).normalized() * width2
+		
+		# Create quad as two triangles with varying width
+		var v1 = p1 + perp1
+		var v2 = p1 - perp1
+		var v3 = p2 + perp2
+		var v4 = p2 - perp2
+		
+		# Triangle 1 with vertex colors
+		light_beam_mesh.surface_set_color(color1)
+		light_beam_mesh.surface_add_vertex(v1)
+		light_beam_mesh.surface_set_color(color1)
+		light_beam_mesh.surface_add_vertex(v2)
+		light_beam_mesh.surface_set_color(color2)
+		light_beam_mesh.surface_add_vertex(v3)
+		
+		# Triangle 2 with vertex colors
+		light_beam_mesh.surface_set_color(color1)
+		light_beam_mesh.surface_add_vertex(v2)
+		light_beam_mesh.surface_set_color(color2)
+		light_beam_mesh.surface_add_vertex(v4)
+		light_beam_mesh.surface_set_color(color2)
+		light_beam_mesh.surface_add_vertex(v3)
+	
 	light_beam_mesh.surface_end()
 
-func update_light_beam_2(points: PackedVector3Array) -> void:
+func update_light_beam_2(points: PackedVector3Array, widths: PackedFloat32Array) -> void:
 	if light_beam_mesh_2 == null:
 		return
 	
@@ -433,9 +514,50 @@ func update_light_beam_2(points: PackedVector3Array) -> void:
 	if points.size() < 2:
 		return
 	
-	light_beam_mesh_2.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
-	for point in points:
-		light_beam_mesh_2.surface_add_vertex(point)
+	# Draw beam as triangles to show thickness
+	light_beam_mesh_2.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	
+	for i in range(points.size() - 1):
+		var p1 = points[i]
+		var p2 = points[i + 1]
+		var direction = (p2 - p1).normalized()
+		
+		# Use width at each point for tapering effect
+		var width1 = widths[i] if i < widths.size() else initial_beam_width
+		var width2 = widths[i + 1] if (i + 1) < widths.size() else initial_beam_width
+		
+		# Calculate alpha based on width (wider = more transparent)
+		var alpha1 = clamp(1.0 - (width1 / initial_beam_width) * 0.4, 0.3, 1.0)
+		var alpha2 = clamp(1.0 - (width2 / initial_beam_width) * 0.4, 0.3, 1.0)
+		var color1 = Color(0, 1, 1, alpha1)
+		var color2 = Color(0, 1, 1, alpha2)
+		
+		# Create perpendicular for width (use up vector)
+		var perp1 = Vector3(0, 1, 0).cross(direction).normalized() * width1
+		var perp2 = Vector3(0, 1, 0).cross(direction).normalized() * width2
+		
+		# Create quad as two triangles with varying width
+		var v1 = p1 + perp1
+		var v2 = p1 - perp1
+		var v3 = p2 + perp2
+		var v4 = p2 - perp2
+		
+		# Triangle 1 with vertex colors
+		light_beam_mesh_2.surface_set_color(color1)
+		light_beam_mesh_2.surface_add_vertex(v1)
+		light_beam_mesh_2.surface_set_color(color1)
+		light_beam_mesh_2.surface_add_vertex(v2)
+		light_beam_mesh_2.surface_set_color(color2)
+		light_beam_mesh_2.surface_add_vertex(v3)
+		
+		# Triangle 2 with vertex colors
+		light_beam_mesh_2.surface_set_color(color1)
+		light_beam_mesh_2.surface_add_vertex(v2)
+		light_beam_mesh_2.surface_set_color(color2)
+		light_beam_mesh_2.surface_add_vertex(v4)
+		light_beam_mesh_2.surface_set_color(color2)
+		light_beam_mesh_2.surface_add_vertex(v3)
+	
 	light_beam_mesh_2.surface_end()
 
 func _clear_kids() -> void: ### the IDF is interested in this one 

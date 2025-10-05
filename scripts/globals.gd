@@ -5,7 +5,10 @@ extends Node3D
 
 ### eg player health, anything you want displayed on the HUD like wave or enemy count 
 @onready var cameraNode 
-@onready var mirrorTower : PackedScene = preload("res://scenes/towers/tower.tscn")
+@onready var mirrorTower : PackedScene = preload("res://scenes/towers/mirror.tscn")
+@onready var convexLensTower : PackedScene = preload("res://scenes/towers/convex_lens.tscn")
+
+var right_mouse_was_pressed: bool = false
 
 
 
@@ -36,13 +39,27 @@ func handlePlayerControls():
 		var collider : CollisionObject3D = rayResult.get("collider")
 		
 		if collider.is_in_group("emptyTile"):
+			# Left click for mirror
 			if Input.is_action_just_pressed("interact"):
-				print("PLACING TOWER")
+				print("PLACING MIRROR")
 				var newTower = mirrorTower.instantiate()
 				collider.add_child(newTower)
 				newTower.global_position = collider.global_position + Vector3(0,0.2,0)
-				# Add random rotation (Y-axis rotation for XZ plane)
 				newTower.rotation.y = randf() * TAU
-				# Add to tower_mirror group for ray tracing
-				newTower.add_to_group("tower_mirror")
+				newTower.add_to_group("tower_line")
+				# Mirror tower has default tower_type = "mirror"
+			
+			# Right click for convex lens
+			var right_mouse_pressed = Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+			if right_mouse_pressed and not right_mouse_was_pressed:
+				print("PLACING CONVEX LENS")
+				var newTower = convexLensTower.instantiate()
+				collider.add_child(newTower)
+				newTower.global_position = collider.global_position + Vector3(0,0.2,0)
+				newTower.rotation.y = randf() * TAU
+				newTower.add_to_group("tower_line")
+				# Set tower type to convex_lens
+				if newTower.has_method("set") and "tower_type" in newTower:
+					newTower.tower_type = "convex_lens"
+			right_mouse_was_pressed = right_mouse_pressed
 				
