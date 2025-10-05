@@ -41,4 +41,8 @@ func handlePlayerControls():
 				var newTower = mirrorTower.instantiate()
 				collider.add_child(newTower)
 				newTower.global_position = collider.global_position + Vector3(0,0.2,0)
+				# Add random rotation (Y-axis rotation for XZ plane)
+				newTower.rotation.y = randf() * TAU
+				# Add to tower_mirror group for ray tracing
+				newTower.add_to_group("tower_mirror")
 				
