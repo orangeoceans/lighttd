@@ -20,6 +20,14 @@ var debug_start_mesh: MeshInstance3D
 var debug_end_mesh: MeshInstance3D
 
 func _ready():
+	# Create collision shape for raycast detection
+	if get_child_count() == 0 or not has_node("CollisionShape3D"):
+		var collision_shape = CollisionShape3D.new()
+		var box_shape = BoxShape3D.new()
+		box_shape.size = Vector3(length * 2, 0.5, 0.2)  # Match tower dimensions
+		collision_shape.shape = box_shape
+		add_child(collision_shape)
+	
 	# Create debug visualization spheres
 	var sphere_mesh = SphereMesh.new()
 	sphere_mesh.radius = 0.1
@@ -41,7 +49,22 @@ func _ready():
 	debug_end_mesh.material_override = mat_end
 	add_child(debug_end_mesh)
 	
+	# Hide indicators by default (shown only when selected)
+	hide_indicators()
+	
 	update_endpoints()
+
+func show_indicators():
+	if debug_start_mesh:
+		debug_start_mesh.visible = true
+	if debug_end_mesh:
+		debug_end_mesh.visible = true
+
+func hide_indicators():
+	if debug_start_mesh:
+		debug_start_mesh.visible = false
+	if debug_end_mesh:
+		debug_end_mesh.visible = false
 
 func _process(delta):
 	# Slowly rotate the mirror
