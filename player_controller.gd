@@ -36,9 +36,9 @@ func get_selected_tower_type() -> String:
 		0:
 			return "mirror"
 		1:
-			return "convex_lens"
-		2:
 			return "concave_lens"
+		2:
+			return "convex_lens"
 		_:
 			return "mirror"
 
