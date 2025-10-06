@@ -1,26 +1,29 @@
-[gd_scene load_steps=6 format=3 uid="uid://bxw4uu7t6ck8q"]
+[gd_scene load_steps=7 format=3 uid="uid://bxw4uu7t6ck8q"]
 
+[ext_resource type="Script" uid="uid://dnjfmsops52cg" path="res://scripts/enemy_controller.gd" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://bawb02ci81455" path="res://scenes/test_level.tscn" id="1_yqjtg"]
 [ext_resource type="PackedScene" uid="uid://cr6nssg54kiew" path="res://scenes/cameraRig.tscn" id="2_lnu2h"]
-[ext_resource type="Script" path="res://hud.gd" id="3_lnu2h"]
-[ext_resource type="Script" path="res://player_controller.gd" id="4_lbhrr"]
+[ext_resource type="Script" uid="uid://b6savkug2uynt" path="res://hud.gd" id="3_lnu2h"]
+[ext_resource type="Script" uid="uid://xuspw0deuucj" path="res://player_controller.gd" id="4_lbhrr"]
 [ext_resource type="Script" uid="uid://dobt6ny1q5mbi" path="res://scripts/color_ratio_container.gd" id="5_iywne"]
 
 [node name="Game" type="Node"]
 
-[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level")]
+[node name="EnemyController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level")]
+script = ExtResource("1_p57ef")
+hud = NodePath("../HUD")
+level = NodePath("../Level")
+
+[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level", "camera_rig")]
 script = ExtResource("4_lbhrr")
 hud = NodePath("../HUD")
 level = NodePath("../Level")
+camera_rig = NodePath("../CameraRig")
 
 [node name="Level" parent="." instance=ExtResource("1_yqjtg")]
 
 [node name="CameraRig" parent="." instance=ExtResource("2_lnu2h")]
-transform = Transform3D(0.707107, 0.408607, -0.577096, 0, 0.816138, 0.577858, 0.707107, -0.408607, 0.577096, 0.408063, 11.5441, 15.5268)
-
-[node name="Camera3D" parent="CameraRig" index="0"]
-projection = 1
-size = 16.038
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6085, 0, 5.64857)
 
 [node name="HUD" type="Control" parent="."]
 layout_mode = 3
@@ -36,10 +39,27 @@ offset_top = 8.0
 offset_right = 457.0
 offset_bottom = 48.0
 
+[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/TowerBar" node_paths=PackedStringArray("multiplier_label")]
+layout_mode = 0
+offset_left = -406.0
+offset_top = 1.0
+offset_right = -196.0
+offset_bottom = 26.0
+script = ExtResource("5_iywne")
+multiplier_label = NodePath("../ColorRatioMultiplierLabel")
+
+[node name="ColorRatioMultiplierLabel" type="RichTextLabel" parent="HUD/TowerBar"]
+layout_mode = 0
+offset_left = -186.0
+offset_top = 3.0
+offset_right = -126.0
+offset_bottom = 43.0
+text = "x1"
+
 [node name="TowerOption" type="OptionButton" parent="HUD/TowerBar"]
 layout_mode = 0
-offset_left = 117.0
-offset_right = 215.0
+offset_left = 757.0
+offset_right = 857.0
 offset_bottom = 31.0
 selected = 0
 item_count = 3
@@ -52,15 +72,16 @@ popup/item_2/id = 2
 
 [node name="TowerControls" type="Control" parent="HUD"]
 anchors_preset = 0
-offset_left = 419.0
-offset_top = 290.0
-offset_right = 459.0
-offset_bottom = 330.0
+offset_left = 1071.0
+offset_top = 649.0
+offset_right = 1111.0
+offset_bottom = 689.0
 
 [node name="MirrorControls" type="Control" parent="HUD/TowerControls"]
 anchors_preset = 0
+offset_top = 27.0
 offset_right = 40.0
-offset_bottom = 40.0
+offset_bottom = 67.0
 
 [node name="RotationBar" type="HScrollBar" parent="HUD/TowerControls/MirrorControls"]
 layout_mode = 0
@@ -72,28 +93,25 @@ offset_bottom = 32.0
 layout_mode = 0
 offset_right = 221.0
 offset_bottom = 23.0
-text = "Rotation"
+text = "Tower Rotation"
 
 [node name="BottomBar" type="Control" parent="HUD"]
 anchors_preset = 0
 offset_left = 11.0
-offset_top = 306.0
+offset_top = 664.0
 offset_right = 51.0
-offset_bottom = 346.0
+offset_bottom = 704.0
 
-[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/BottomBar" node_paths=PackedStringArray("multiplier_label")]
+[node name="StartWave" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_right = 210.0
-offset_bottom = 34.0
-script = ExtResource("5_iywne")
-multiplier_label = NodePath("../ColorRatioMultiplierLabel")
+offset_top = 14.0
+offset_right = 92.0
+offset_bottom = 45.0
+text = "Next Wave
+"
 
-[node name="ColorRatioMultiplierLabel" type="RichTextLabel" parent="HUD/BottomBar"]
-layout_mode = 0
-offset_left = 220.0
-offset_top = 4.0
-offset_right = 280.0
-offset_bottom = 44.0
-text = "x1"
-
-[editable path="CameraRig"]
+[node name="ResetCamera" type="Button" parent="HUD/BottomBar"]
+offset_top = -27.0
+offset_right = 116.0
+offset_bottom = 4.0
+text = "Reset Camera"

@@ -137,7 +137,7 @@ func create_tower(tower_type: String, tile: Node) -> TowerLine:
 			new_tower = Globals.mirrorTower.instantiate()
 			new_tower.add_to_group("tower_line")
 	tile.add_child(new_tower)
-	new_tower.global_position = tile.global_position + Vector3(0,0.2,0)
-	new_tower.rotation.y = TAU
+	new_tower.global_position = tile.global_position + Vector3(0,1,0)
+	new_tower.set_tower_rotation(TAU)
 	new_tower.tower_type = tower_type
 	return new_tower

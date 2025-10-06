@@ -9,26 +9,24 @@
 
 [node name="Level" type="Node3D" node_paths=PackedStringArray("board")]
 script = ExtResource("1_tmr53")
-board = NodePath("board")
+board = NodePath("Board")
 
-[node name="board" type="Node3D" parent="."]
+[node name="Board" type="Node3D" parent="."]
 script = ExtResource("1_2venv")
 buildable_scene = ExtResource("2_j6w7d")
 road_scene = ExtResource("3_x4b8f")
 spawn_scene = ExtResource("3_x4b8f")
 goal_scene = ExtResource("3_x4b8f")
 
-[node name="CSGBox3D" type="CSGBox3D" parent="board"]
+[node name="CSGBox3D" type="CSGBox3D" parent="Board"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.595581, -0.387695, 0.271973)
 size = Vector3(50, 0.224609, 59)
 
-[node name="Tiles" type="Node3D" parent="board"]
+[node name="Tiles" type="Node3D" parent="Board"]
 
-[node name="Path3D" type="Path3D" parent="board"]
+[node name="Path3D" type="Path3D" parent="Board"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.1444, -3)
 curve = SubResource("Curve3D_qcd3b")
-
-[node name="enitities" type="Node3D" parent="."]
 
 [node name="utilities" type="Node3D" parent="."]
 
@@ -38,4 +36,4 @@ shadow_enabled = true
 
 [node name="spawnTimer" type="Timer" parent="utilities"]
 
-[connection signal="timeout" from="utilities/spawnTimer" to="board" method="_on_spawn_timer_timeout"]
+[connection signal="timeout" from="utilities/spawnTimer" to="Board" method="_on_spawn_timer_timeout"]

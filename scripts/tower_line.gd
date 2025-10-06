@@ -6,8 +6,8 @@ class_name TowerLine
 		length = value
 		update_endpoints()
 
-@export var rotation_speed: float = 0.5  # Radians per second
 @export var tower_type: String = "mirror"
+@export var gem_node: Node3D = null
 
 # Start and end points in XZ plane (Vector2 represents X and Z coordinates)
 var start_point: Vector2
@@ -66,16 +66,34 @@ func hide_indicators():
 	if debug_end_mesh:
 		debug_end_mesh.visible = false
 
-func _process(delta):
-	# Slowly rotate the mirror
-	rotation.y += rotation_speed * delta
+func _process(_delta):
+	# Get the effective rotation for comparison
+	var current_rotation = gem_node.global_rotation.y if gem_node else global_rotation.y
 	
-	if global_position != _cached_position or global_rotation.y != _cached_rotation:
+	# Check if position or rotation changed
+	if global_position != _cached_position or current_rotation != _cached_rotation:
 		update_endpoints()
 
+# Set the rotation of the tower (rotates gem_node if it exists, otherwise rotates whole tower)
+func set_tower_rotation(y_rotation: float) -> void:
+	if gem_node:
+		# Rotate only the gem node
+		gem_node.rotation.y = y_rotation
+	else:
+		# Rotate the whole tower
+		rotation.y = y_rotation
+	
+	# Force update endpoints
+	update_endpoints()
+
 func update_endpoints():
-	# Extract XZ plane rotation (Y-axis rotation in 3D)
-	var rotation_y = global_rotation.y
+	# Get the effective rotation (from gem_node if it exists, otherwise from tower)
+	var rotation_y: float
+	if gem_node:
+		rotation_y = gem_node.global_rotation.y
+	else:
+		rotation_y = global_rotation.y
+	
 	# Rotation directly defines the mirror line orientation
 	var mirror_direction = Vector2(sin(rotation_y), cos(rotation_y))
 	

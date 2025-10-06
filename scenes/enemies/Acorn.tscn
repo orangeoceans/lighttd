@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://cyr0aj4jslr7i"]
+[gd_scene load_steps=22 format=3 uid="uid://c2ny60gpbbhpl"]
 
 [ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_4hl6o"]
 [ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_qqq5d"]
@@ -102,6 +102,7 @@ mesh = SubResource("CapsuleMesh_fvkai")
 shape = SubResource("CylinderShape3D_fjs4f")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="enemyBody"]
+transform = Transform3D(0.67, 0, 0, 0, 0.67, 0, 0, 0, 0.67, 0, 0, 0)
 billboard = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_pl84f")

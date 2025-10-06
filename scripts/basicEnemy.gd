@@ -2,6 +2,9 @@ extends CharacterBody3D
 
 ### This enemy can be extended from its basic form to create a variety of enemies 
 
+signal enemy_died
+signal enemy_left_board
+
 # Status effect enum
 enum StatusEffect {
 	BURNED,
@@ -66,7 +69,9 @@ func _physics_process(delta: float) -> void:
 	
 	if path.get_progress_ratio() >= 0.99:
 		###TODO: remove health if enemy makes it to the end 
-		path.queue_free()
+		enemy_left_board.emit()  # Emit signal for EnemyController tracking
+		# Use call_deferred to ensure signal is processed before freeing
+		path.call_deferred("queue_free")
 
 func take_damage(damage: float, apply_weakened: bool = true) -> void:
 	var final_damage = damage
@@ -89,7 +94,7 @@ func take_damage(damage: float, apply_weakened: bool = true) -> void:
 		die()
 
 func die() -> void:
-	print("Enemy destroyed!")
+	enemy_died.emit()  # Emit signal for EnemyController tracking
 	if path:
 		path.queue_free()
 	else:

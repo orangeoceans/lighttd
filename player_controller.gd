@@ -4,6 +4,7 @@ extends Node3D
 
 @export var hud: Control
 @export var level: Level
+@export var camera_rig: Node3D
 @export var max_active_beams: int = 2  # Maximum number of beams that can be active at once
 
 # State tracking
@@ -14,6 +15,24 @@ var original_parent: Node = null
 
 var selected_tower: TowerLine = null
 
+# Camera control variables
+var is_panning: bool = false
+var is_rotating: bool = false
+var pan_start_position: Vector2
+var rotation_start_position: Vector2
+var camera_rotation_sensitivity: float = 0.005
+var camera_pan_sensitivity: Vector2 = Vector2(0.01, 0.02)
+var camera_zoom_sensitivity: float = 0.5
+var min_zoom: float = 10.0  # Minimum FOV/size (zoomed in)
+var max_zoom: float = 120.0  # Maximum FOV/size (zoomed out)
+
+# Default camera settings (stored on first frame)
+var default_camera_rig_position: Vector3
+var default_camera_rig_rotation: Vector3
+var default_camera_fov: float = 75.0  # Default perspective FOV
+var default_camera_size: float = 20.0  # Default orthogonal size
+var camera_defaults_stored: bool = false
+
 # Beam activation tracking
 var active_beams: Array[Beam] = []  # Currently active beams
 
@@ -21,6 +40,9 @@ var active_beams: Array[Beam] = []  # Currently active beams
 var tower_option_dropdown: OptionButton = null
 
 func _ready():
+	# Add to group for HUD to find
+	add_to_group("player_controller")
+	
 	# Find the tower type dropdown from HUD
 	if hud:
 		tower_option_dropdown = hud.get_node_or_null("TowerBar/TowerOption")
@@ -29,13 +51,18 @@ func _ready():
 	else:
 		print("WARNING: HUD reference not set in PlayerController")
 
-func _process(_delta: float) -> void:
+func _process(_delta):
+	# Store default camera settings on first frame
+	if not camera_defaults_stored and camera_rig:
+		store_default_camera_settings()
+	
 	handle_beam_activation()
+	handle_camera_controls()
 	handle_player_controls()
 
 func get_selected_tower_type() -> String:
 	if not tower_option_dropdown:
-		return "mirror" 
+		return "mirror"
 	
 	var selected_idx = tower_option_dropdown.selected
 	match selected_idx:
@@ -89,6 +116,128 @@ func handle_beam_activation() -> void:
 				active_beams.erase(beam)
 				print("Beam ", i, " (", char(beam.key), ") deactivated")
 
+func handle_camera_controls():
+	if not camera_rig:
+		return
+	
+	# Handle camera panning (left + right click)
+	if Input.is_action_pressed("interact") and Input.is_action_pressed("interact_2"):
+		if not is_panning:
+			is_panning = true
+			pan_start_position = get_viewport().get_mouse_position()
+		else:
+			var mouse_delta = get_viewport().get_mouse_position() - pan_start_position
+			var pan_vector = Vector3(-mouse_delta.x * camera_pan_sensitivity.x + mouse_delta.y * camera_pan_sensitivity.y, 0, - mouse_delta.x * camera_pan_sensitivity.x - mouse_delta.y * camera_pan_sensitivity.y)
+			camera_rig.global_position += pan_vector
+			pan_start_position = get_viewport().get_mouse_position()
+	else:
+		is_panning = false
+	
+	# Handle camera rotation (right click drag) - orbit around pivot
+	if Input.is_action_pressed("interact_2") and not Input.is_action_pressed("interact"):
+		if not is_rotating:
+			is_rotating = true
+			rotation_start_position = get_viewport().get_mouse_position()
+		else:
+			var mouse_delta = get_viewport().get_mouse_position() - rotation_start_position
+			
+			# Rotate the entire rig around its origin (the pivot point)
+			# Horizontal rotation (Y-axis) - left/right mouse movement
+			camera_rig.rotation.y -= mouse_delta.x * camera_rotation_sensitivity
+			
+			# Vertical rotation (X-axis) - up/down mouse movement  
+			camera_rig.rotation.x -= mouse_delta.y * camera_rotation_sensitivity
+			
+			# Clamp vertical rotation to prevent camera flipping upside down
+			camera_rig.rotation.x = clamp(camera_rig.rotation.x, -PI/2 + 0.1, PI/2 - 0.1)
+			
+			rotation_start_position = get_viewport().get_mouse_position()
+	else:
+		is_rotating = false
+
+func _input(event):
+	# Handle zoom with scroll wheel
+	if event is InputEventMouseButton and camera_rig:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			zoom_camera(-camera_zoom_sensitivity)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			zoom_camera(camera_zoom_sensitivity)
+
+func zoom_camera(zoom_delta: float):
+	if not camera_rig:
+		return
+	
+	# Find the Camera3D node in the hierarchy
+	var camera = find_camera_in_rig()
+	if not camera:
+		return
+	
+	if camera.projection == Camera3D.PROJECTION_PERSPECTIVE:
+		# For perspective cameras, adjust FOV
+		var current_fov = camera.fov
+		var new_fov = clamp(current_fov + zoom_delta * 10, min_zoom, max_zoom)  # Scale zoom_delta for FOV
+		camera.fov = new_fov
+	elif camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+		# For orthogonal cameras, adjust size
+		var current_size = camera.size
+		var new_size = clamp(current_size + zoom_delta, min_zoom, max_zoom)
+		camera.size = new_size
+
+func find_camera_in_rig() -> Camera3D:
+	if not camera_rig:
+		return null
+	
+	# Recursively search for Camera3D in the rig hierarchy
+	return find_camera_recursive(camera_rig)
+
+func find_camera_recursive(node: Node) -> Camera3D:
+	if node is Camera3D:
+		return node
+	
+	for child in node.get_children():
+		var camera = find_camera_recursive(child)
+		if camera:
+			return camera
+	
+	return null
+
+func store_default_camera_settings():
+	if not camera_rig:
+		return
+	
+	# Store camera rig position and rotation
+	default_camera_rig_position = camera_rig.global_position
+	default_camera_rig_rotation = camera_rig.rotation
+	
+	# Store camera FOV/size
+	var camera = find_camera_in_rig()
+	if camera:
+		if camera.projection == Camera3D.PROJECTION_PERSPECTIVE:
+			default_camera_fov = camera.fov
+		elif camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+			default_camera_size = camera.size
+	
+	camera_defaults_stored = true
+	print("Camera defaults stored")
+
+func reset_camera():
+	if not camera_rig or not camera_defaults_stored:
+		return
+	
+	# Reset camera rig position and rotation
+	camera_rig.global_position = default_camera_rig_position
+	camera_rig.rotation = default_camera_rig_rotation
+	
+	# Reset camera FOV/size
+	var camera = find_camera_in_rig()
+	if camera:
+		if camera.projection == Camera3D.PROJECTION_PERSPECTIVE:
+			camera.fov = default_camera_fov
+		elif camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
+			camera.size = default_camera_size
+	
+	print("Camera reset to defaults")
+
 func handle_player_controls():	
 	if not Globals.cameraNode:
 		return
@@ -111,6 +260,10 @@ func handle_player_controls():
 	if rayResult.size() > 0:
 		mouse_over_obj = rayResult.get("collider")
 
+	# Skip tower interactions if camera controls are active
+	if is_panning or is_rotating:
+		return
+	
 	if Input.is_action_just_pressed("interact"):
 		if mouse_over_obj and mouse_over_obj.is_in_group("emptyTile"):
 			print(mouse_over_obj.get_children())
@@ -158,7 +311,7 @@ func handle_player_controls():
 			
 			# Snap to grid tile if hovering over one
 			if hover_collider and hover_collider.is_in_group("emptyTile"):
-				dragging_tower.global_position = hover_collider.global_position + Vector3(0, 0.2, 0)
+				dragging_tower.global_position = Vector3(hover_collider.global_position.x, dragging_tower.global_position.y, hover_collider.global_position.z)
 			else:
 				# Free movement if not over a tile
 				dragging_tower.global_position = Vector3(hit_pos.x, dragging_tower.global_position.y, hit_pos.z)
@@ -201,7 +354,7 @@ func cancel_dragging():
 	
 	# Return to original position
 	if original_parent and is_instance_valid(original_parent):
-		dragging_tower.global_position = original_parent.global_position + Vector3(0, 0.2, 0)
+		dragging_tower.global_position = Vector3(original_parent.global_position.x, dragging_tower.global_position.y, original_parent.global_position.z)
 	
 	# Keep the tower selected
 	select_tower(dragging_tower)
@@ -225,7 +378,7 @@ func stop_dragging(empty_tile: CollisionObject3D):
 		if dragging_tower.get_parent() != empty_tile:
 			dragging_tower.get_parent().remove_child(dragging_tower)
 			empty_tile.add_child(dragging_tower)
-			dragging_tower.global_position = empty_tile.global_position + Vector3(0, 0.2, 0)
+			dragging_tower.global_position = Vector3(empty_tile.global_position.x, dragging_tower.global_position.y, empty_tile.global_position.z)
 			print("SNAPPED TO TILE")
 			select_tower(dragging_tower)
 	else:

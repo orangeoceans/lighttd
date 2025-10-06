@@ -4,5 +4,10 @@
 
 [node name="CameraRig" type="Node3D"]
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="CameraArm" type="Node3D" parent="."]
+transform = Transform3D(0.707107, 0.40558, -0.579228, 0, 0.819152, 0.573576, 0.707107, -0.40558, 0.579228, -6.48155, 6.76597, 6.66507)
+
+[node name="Camera3D" type="Camera3D" parent="CameraArm"]
+projection = 1
+size = 19.724
 script = ExtResource("1_i50yt")

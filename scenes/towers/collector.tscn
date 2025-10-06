@@ -1,24 +1,17 @@
 [gd_scene load_steps=4 format=3 uid="uid://blixl817m1lld"]
 
 [ext_resource type="Script" uid="uid://buo3r1eabk0v5" path="res://scripts/tower_line.gd" id="1_w6v4q"]
+[ext_resource type="PackedScene" uid="uid://bwuh0nkfda43l" path="res://assets/models/2025-10-04_lens-02.gltf" id="2_quypa"]
+[ext_resource type="PackedScene" uid="uid://bfn3lfc1nsum2" path="res://assets/models/2025-10-05_tower-01_rigged_v2.glb" id="3_ugm0u"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_tsx0o"]
-
-[sub_resource type="TorusMesh" id="TorusMesh_4fw4h"]
-inner_radius = 1.135
-outer_radius = 1.315
-
-[node name="Tower" type="StaticBody3D"]
+[node name="Tower2" type="StaticBody3D"]
 script = ExtResource("1_w6v4q")
-rotation_speed = 0.0
-tower_type = "concave_lens"
+tower_type = "collector"
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.422611, 0, 0, 0, 1, 0, 0, 0)
-visible = false
-mesh = SubResource("BoxMesh_tsx0o")
+[node name="2025-10-05_tower-01_rigged_v2" parent="." instance=ExtResource("3_ugm0u")]
+transform = Transform3D(0.4, 0, 0, 0, -1.74846e-08, -0.4, 0, 0.4, -1.74846e-08, 0, 0, 0)
 
-[node name="Lens2" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.027474, 0.74991, 0, -0.523013, -0.039393, 0, 0, 0, 0.655484, 0, 1.69332, 0)
-mesh = SubResource("TorusMesh_4fw4h")
-skeleton = NodePath("../MeshInstance3D")
+[node name="Gem" type="Node3D" parent="."]
+
+[node name="blockbench_export2" parent="Gem" instance=ExtResource("2_quypa")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0.499714, 0)

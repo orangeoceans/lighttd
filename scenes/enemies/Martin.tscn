@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://b6btch6lshgdr"]
+[gd_scene load_steps=14 format=3 uid="uid://ch6mbgp7tel2n"]
 
 [ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_7usu8"]
 [ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_7cxtf"]
@@ -10,7 +10,7 @@
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_fvkai"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs4f"]
-radius = 1.10547
+radius = 1.40869
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_dwkrr"]
 atlas = ExtResource("3_qqip5")
@@ -65,6 +65,7 @@ mesh = SubResource("CapsuleMesh_fvkai")
 shape = SubResource("CylinderShape3D_fjs4f")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="enemyBody"]
+transform = Transform3D(0.67, 0, 0, 0, 0.67, 0, 0, 0, 0.67, 0, 0, 0)
 billboard = 2
 texture_filter = 0
 sprite_frames = SubResource("SpriteFrames_pl84f")

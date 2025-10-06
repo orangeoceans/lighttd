@@ -5,7 +5,7 @@ class_name Board
 ###
 
 
-@export var hex_size: float = 1.05                 # center -> corner radius
+@export var hex_size: float = 1.0                 # center -> corner radius
 @export var buildable_scene: PackedScene          # for '.' grass/buildable
 @export var road_scene: PackedScene               # for 'R' road tiles
 @export var spawn_scene: PackedScene              # for 'S'
@@ -16,13 +16,6 @@ class_name Board
 ###
 
 
-@onready var basicEnemy : PackedScene = preload("res://scenes/enemies/basicEnemy.tscn")
-
-var enemiesToSpawn : int = 30 ### number of enemies to spawn per round
-
-var canSpawnEnemiesCooldown : bool = true; 
-
-@onready var spawn_timer: Timer = $"../utilities/spawnTimer"
 @onready var mirrorTower : PackedScene = preload("res://scenes/towers/mirror.tscn")
 
 @onready var camera = Globals.cameraNode
@@ -37,6 +30,8 @@ var beam_directions: Array[Vector2] = []
 
 
 func _ready() -> void:
+	# Add to board group so HUD can find it
+	add_to_group("board")
 	
 	var map := [
 	
@@ -51,32 +46,6 @@ func _ready() -> void:
 	]	
 	setUpBoard(map)
 
-
-
-
-func _process (_delta):
-	spawner()
-
-func spawner() -> void:
-	if enemiesToSpawn > 0 and canSpawnEnemiesCooldown:
-		spawn_timer.start()
-		var currentEnemy = basicEnemy.instantiate()
-		# Safety: ensure scenePath exists and is valid
-		if !is_instance_valid(scenePath):
-			# Recreate it if you ever change _clear_kids() again
-			scenePath = Path3D.new()
-			scenePath.name = "EnemyPath"
-			add_child(scenePath)
-		scenePath.add_child(currentEnemy)  # now safe
-		enemiesToSpawn -= 1
-		canSpawnEnemiesCooldown = false
-
-
-
-func _on_spawn_timer_timeout() -> void:
-	canSpawnEnemiesCooldown = true
-
-	
 func setUpBoard(rows: Array) -> void:
 	_clear_kids()
 
@@ -129,12 +98,16 @@ func setUpBoard(rows: Array) -> void:
 				'#':
 					if buildable_scene:
 						var blocked = buildable_scene.instantiate() as Node3D
-						blocked.position = pos
+						# Add slight random height variation
+						var height_variation = randf_range(-0.2, 0.2) + 5
+						blocked.position = pos + Vector3(0, height_variation, 0)
 						tiles_root.add_child(blocked)
 				'.':
 					if buildable_scene:
 						var gnd = buildable_scene.instantiate() as Node3D
-						gnd.position = pos
+						# Add slight random height variation
+						var height_variation = randf_range(-0.2, 0.2)
+						gnd.position = pos + Vector3(0, height_variation, 0)
 						tiles_root.add_child(gnd)
 				_:
 					# Unknown symbol: skip silently for jam speed
@@ -189,7 +162,7 @@ func setUpBoard(rows: Array) -> void:
 	# Create all light beams
 	for i in range(NUM_RAYS):
 		var board_height = rows.size() * hex_size * 1.5
-		var beam_y = 0.5  # Slightly above ground
+		var beam_y = 1  # Slightly above ground
 		var spacing_vertical = board_height / float(NUM_RAYS + 1)
 		var start_z = spacing_vertical * (i + 1)
 		var beam_color_enum = i as Globals.BeamColor  # Use enum index
@@ -235,8 +208,10 @@ func _road_neighbors(p: Vector2i, rows: Array) -> Array[Vector2i]:
 
 func place_collector_tower(rows: Array, goal: Vector2i, tiles_root: Node3D) -> void:
 	# Only place if one doesn't already exist
+	print("PLACING COLLECTOR")
 	if Globals.collector_tower_instance and is_instance_valid(Globals.collector_tower_instance):
 		return
+	print("PLACING COLLECTOR 2")
 	
 	var w = rows[0].length()
 	var h := rows.size()
@@ -257,10 +232,12 @@ func place_collector_tower(rows: Array, goal: Vector2i, tiles_root: Node3D) -> v
 		if nc >= 0 and nc < w and nr >= 0 and nr < h:
 			var ch := (rows[nr] as String)[nc]
 			if ch == '.':
-				# Find the actual tile node
+				# Find the actual tile node (compare only XZ, ignore Y height)
 				for tile in tiles_root.get_children():
 					var tile_pos = _hex_center(nc, nr)
-					if tile.position.distance_to(tile_pos) < 0.1:
+					var tile_xz = Vector2(tile.position.x, tile.position.z)
+					var target_xz = Vector2(tile_pos.x, tile_pos.z)
+					if tile_xz.distance_to(target_xz) < 0.1:
 						collector_tile = tile
 						break
 				if collector_tile:
@@ -268,9 +245,11 @@ func place_collector_tower(rows: Array, goal: Vector2i, tiles_root: Node3D) -> v
 	
 	# Place collector tower if we found a suitable tile
 	if collector_tile:
-		for child in collector_tile.get_children():
+		print("PLACING COLLECTOR 3")
+		for child in collector_tile.get_node("BasicTile").get_children():
 			if child.is_in_group("emptyTile"):
 				Globals.create_tower("collector", child)
+				print("PLACED COLLECTOR")
 				break
 
 
