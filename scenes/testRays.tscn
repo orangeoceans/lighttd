@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dbbwofm4x2dk2"]
 
-[ext_resource type="Script" uid="uid://dljd0qc0rmoml" path="res://scripts/test_rays.gd" id="1_bstgu"]
-[ext_resource type="Script" uid="uid://ckme0c5dnbp8a" path="res://scripts/test_mirror.gd" id="1_cwbco"]
+[ext_resource type="Script" path="res://scripts/test_rays.gd" id="1_bstgu"]
+[ext_resource type="Script" path="res://scripts/test_mirror.gd" id="1_cwbco"]
 
 [node name="TestRays" type="Node2D"]
 script = ExtResource("1_bstgu")

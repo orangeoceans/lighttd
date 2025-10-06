@@ -1,0 +1,163 @@
+[gd_scene load_steps=34 format=3 uid="uid://bn3t41s3uagoj"]
+
+[ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_da4gk"]
+[ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_xetvt"]
+[ext_resource type="Texture2D" uid="uid://bgs88v22j4nus" path="res://scenes/enemies/Acorn Front/Acorn 1.png" id="3_k2rfk"]
+[ext_resource type="Texture2D" uid="uid://dgccokeautxig" path="res://scenes/enemies/Acorn Front/Acorn 2.png" id="4_n6wom"]
+[ext_resource type="Texture2D" uid="uid://ck4kh1eyncejn" path="res://scenes/enemies/Acorn Front/Acorn 3.png" id="5_c1mdk"]
+[ext_resource type="Texture2D" uid="uid://cjtdw146aurgf" path="res://scenes/enemies/Acorn Front/Acorn 4.png" id="6_owfua"]
+[ext_resource type="Texture2D" uid="uid://bt5i4bivw68dq" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 1.png" id="7_udyj8"]
+[ext_resource type="Texture2D" uid="uid://x0ex3ljxsfa5" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 2.png" id="8_vh8qy"]
+[ext_resource type="Texture2D" uid="uid://bh55ug15yybwn" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 3.png" id="9_wghmr"]
+[ext_resource type="Texture2D" uid="uid://fabkcwm203nv" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 4.png" id="10_ym5b5"]
+[ext_resource type="Texture2D" uid="uid://bpmmq0gf3qkx3" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 1.png" id="11_udyj8"]
+[ext_resource type="Texture2D" uid="uid://dvsnqtrqe1e06" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 2.png" id="12_vh8qy"]
+[ext_resource type="Texture2D" uid="uid://d3thoxaubdyo" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 3.png" id="13_wghmr"]
+[ext_resource type="Texture2D" uid="uid://bxn3ervodp2x3" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 4.png" id="14_ym5b5"]
+[ext_resource type="Texture2D" uid="uid://cwo8g005tr607" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 5.png" id="15_7hsck"]
+[ext_resource type="Texture2D" uid="uid://7eneagndxj8s" path="res://scenes/enemies/Beefy Beetle Champion/Beetle 6.png" id="16_q76a1"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fvkai"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs4f"]
+radius = 1.10547
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dmikn"]
+atlas = ExtResource("3_k2rfk")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mcy2i"]
+atlas = ExtResource("4_n6wom")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sxknj"]
+atlas = ExtResource("5_c1mdk")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_187hd"]
+atlas = ExtResource("6_owfua")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dwkrr"]
+atlas = ExtResource("7_udyj8")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7vtee"]
+atlas = ExtResource("8_vh8qy")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yscy2"]
+atlas = ExtResource("9_wghmr")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exadw"]
+atlas = ExtResource("10_ym5b5")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oe77p"]
+atlas = ExtResource("11_udyj8")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yalvw"]
+atlas = ExtResource("12_vh8qy")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x7x1o"]
+atlas = ExtResource("13_wghmr")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v8fj1"]
+atlas = ExtResource("14_ym5b5")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mm5di"]
+atlas = ExtResource("15_7hsck")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dqd08"]
+atlas = ExtResource("16_q76a1")
+region = Rect2(0, 0, 1620, 952)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pl84f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dmikn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mcy2i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sxknj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_187hd")
+}],
+"loop": true,
+"name": &"Acorn",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dwkrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7vtee")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yscy2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exadw")
+}],
+"loop": true,
+"name": &"Martin",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oe77p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yalvw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x7x1o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v8fj1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mm5di")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dqd08")
+}],
+"loop": true,
+"name": &"beefy",
+"speed": 5.0
+}]
+
+[node name="basicEnemy" type="PathFollow3D"]
+
+[node name="enemyBody" type="CharacterBody3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
+script = ExtResource("1_da4gk")
+health_bar_scene = ExtResource("2_xetvt")
+
+[node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]
+visible = false
+mesh = SubResource("CapsuleMesh_fvkai")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="enemyBody"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="enemyBody/StaticBody3D"]
+shape = SubResource("CylinderShape3D_fjs4f")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="enemyBody"]
+billboard = 2
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_pl84f")
+animation = &"beefy"
+autoplay = "beefy"
+frame_progress = 0.629257

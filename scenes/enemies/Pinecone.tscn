@@ -1,0 +1,183 @@
+[gd_scene load_steps=40 format=3 uid="uid://d0k82bmpal7j5"]
+
+[ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_c1aog"]
+[ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_uuxhk"]
+[ext_resource type="Texture2D" uid="uid://bt5i4bivw68dq" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 1.png" id="3_rd427"]
+[ext_resource type="Texture2D" uid="uid://x0ex3ljxsfa5" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 2.png" id="4_u2qn3"]
+[ext_resource type="Texture2D" uid="uid://bh55ug15yybwn" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 3.png" id="5_hm17g"]
+[ext_resource type="Texture2D" uid="uid://fabkcwm203nv" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 4.png" id="6_gt0qq"]
+[ext_resource type="Texture2D" uid="uid://bsjpjxgmm8js4" path="res://scenes/enemies/Pinecone Front/Pinecone 1.png" id="7_sjuxk"]
+[ext_resource type="Texture2D" uid="uid://dah3tquiiktv5" path="res://scenes/enemies/Pinecone Front/Pinecone 2.png" id="8_ylpwo"]
+[ext_resource type="Texture2D" uid="uid://tyr3ercquv2k" path="res://scenes/enemies/Pinecone Front/Pinecone 3.png" id="9_a7qf1"]
+[ext_resource type="Texture2D" uid="uid://ba25tl11yoxy3" path="res://scenes/enemies/Pinecone Front/Pinecone 4.png" id="10_vq1d7"]
+[ext_resource type="Texture2D" uid="uid://qpoxlaiq7sjj" path="res://scenes/enemies/Pinecone Front/Pinecone 5.png" id="11_q6shd"]
+[ext_resource type="Texture2D" uid="uid://m2agfvn7sc7j" path="res://scenes/enemies/Pinecone Front/Pinecone 6.png" id="12_bjdpo"]
+[ext_resource type="Texture2D" uid="uid://dkpvf0vmu03xy" path="res://scenes/enemies/Pinecone Front/Pinecone 7.png" id="13_w4j1w"]
+[ext_resource type="Texture2D" uid="uid://dyphgbscqbpi1" path="res://scenes/enemies/Pinecone Front/Pinecone 8.png" id="14_nirr3"]
+[ext_resource type="Texture2D" uid="uid://bcv6alg8fsqn5" path="res://scenes/enemies/Pinecone Front/Pinecone 9.png" id="15_f37qt"]
+[ext_resource type="Texture2D" uid="uid://da2fffcqw8n2c" path="res://scenes/enemies/Pinecone Front/Pinecone 11.png" id="16_y1jyw"]
+[ext_resource type="Texture2D" uid="uid://3r8mdmver5mr" path="res://scenes/enemies/Pinecone Front/Pinecone 12.png" id="17_cxyas"]
+[ext_resource type="Texture2D" uid="uid://d23frtb2qq3hb" path="res://scenes/enemies/Pinecone Front/Pinecone 13.png" id="18_3op1r"]
+[ext_resource type="Texture2D" uid="uid://gxi8pm4prmx3" path="res://scenes/enemies/Pinecone Front/Pinecone 14.png" id="19_kdgsa"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fvkai"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs4f"]
+radius = 1.10547
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dwkrr"]
+atlas = ExtResource("3_rd427")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7vtee"]
+atlas = ExtResource("4_u2qn3")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yscy2"]
+atlas = ExtResource("5_hm17g")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exadw"]
+atlas = ExtResource("6_gt0qq")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bhlkr"]
+atlas = ExtResource("7_sjuxk")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s76m1"]
+atlas = ExtResource("8_ylpwo")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7syjg"]
+atlas = ExtResource("9_a7qf1")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xka8q"]
+atlas = ExtResource("10_vq1d7")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ov0kx"]
+atlas = ExtResource("11_q6shd")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jr4r3"]
+atlas = ExtResource("12_bjdpo")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vpkon"]
+atlas = ExtResource("13_w4j1w")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4213"]
+atlas = ExtResource("14_nirr3")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4fb28"]
+atlas = ExtResource("15_f37qt")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcdvk"]
+atlas = ExtResource("16_y1jyw")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4stuj"]
+atlas = ExtResource("17_cxyas")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8an6r"]
+atlas = ExtResource("18_3op1r")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pgdke"]
+atlas = ExtResource("19_kdgsa")
+region = Rect2(0, 0, 598, 602)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pl84f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dwkrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7vtee")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yscy2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exadw")
+}],
+"loop": true,
+"name": &"Martin",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bhlkr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s76m1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7syjg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xka8q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ov0kx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jr4r3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vpkon")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4213")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4fb28")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcdvk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4stuj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8an6r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pgdke")
+}],
+"loop": true,
+"name": &"Pinecone",
+"speed": 5.0
+}]
+
+[node name="basicEnemy" type="PathFollow3D"]
+
+[node name="enemyBody" type="CharacterBody3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
+script = ExtResource("1_c1aog")
+health_bar_scene = ExtResource("2_uuxhk")
+
+[node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]
+visible = false
+mesh = SubResource("CapsuleMesh_fvkai")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="enemyBody"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="enemyBody/StaticBody3D"]
+shape = SubResource("CylinderShape3D_fjs4f")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="enemyBody"]
+billboard = 2
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_pl84f")
+animation = &"Pinecone"
+autoplay = "Pinecone"
+frame = 4
+frame_progress = 0.0846525

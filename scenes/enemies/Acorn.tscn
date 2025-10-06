@@ -1,0 +1,109 @@
+[gd_scene load_steps=22 format=3 uid="uid://cyr0aj4jslr7i"]
+
+[ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_4hl6o"]
+[ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_qqq5d"]
+[ext_resource type="Texture2D" uid="uid://bgs88v22j4nus" path="res://scenes/enemies/Acorn Front/Acorn 1.png" id="3_ygjje"]
+[ext_resource type="Texture2D" uid="uid://bt5i4bivw68dq" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 1.png" id="3_yo8r5"]
+[ext_resource type="Texture2D" uid="uid://x0ex3ljxsfa5" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 2.png" id="4_i8xno"]
+[ext_resource type="Texture2D" uid="uid://dgccokeautxig" path="res://scenes/enemies/Acorn Front/Acorn 2.png" id="4_nsdo8"]
+[ext_resource type="Texture2D" uid="uid://ck4kh1eyncejn" path="res://scenes/enemies/Acorn Front/Acorn 3.png" id="5_qxugt"]
+[ext_resource type="Texture2D" uid="uid://bh55ug15yybwn" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 3.png" id="5_ygjje"]
+[ext_resource type="Texture2D" uid="uid://cjtdw146aurgf" path="res://scenes/enemies/Acorn Front/Acorn 4.png" id="6_7d2o2"]
+[ext_resource type="Texture2D" uid="uid://fabkcwm203nv" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 4.png" id="6_nsdo8"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fvkai"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fjs4f"]
+radius = 1.10547
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_valnk"]
+atlas = ExtResource("3_ygjje")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rnooo"]
+atlas = ExtResource("4_nsdo8")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q5llv"]
+atlas = ExtResource("5_qxugt")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_caa84"]
+atlas = ExtResource("6_7d2o2")
+region = Rect2(0, 0, 362, 394)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dwkrr"]
+atlas = ExtResource("3_yo8r5")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7vtee"]
+atlas = ExtResource("4_i8xno")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yscy2"]
+atlas = ExtResource("5_ygjje")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exadw"]
+atlas = ExtResource("6_nsdo8")
+region = Rect2(0, 0, 560, 518)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pl84f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_valnk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rnooo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q5llv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_caa84")
+}],
+"loop": true,
+"name": &"Acorn",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dwkrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7vtee")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yscy2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exadw")
+}],
+"loop": true,
+"name": &"Martin",
+"speed": 5.0
+}]
+
+[node name="basicEnemy" type="PathFollow3D"]
+
+[node name="enemyBody" type="CharacterBody3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
+script = ExtResource("1_4hl6o")
+health_bar_scene = ExtResource("2_qqq5d")
+
+[node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]
+visible = false
+mesh = SubResource("CapsuleMesh_fvkai")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="enemyBody"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="enemyBody/StaticBody3D"]
+shape = SubResource("CylinderShape3D_fjs4f")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="enemyBody"]
+billboard = 2
+texture_filter = 0
+sprite_frames = SubResource("SpriteFrames_pl84f")
+animation = &"Acorn"
+autoplay = "Acorn"
