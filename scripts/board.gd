@@ -156,22 +156,94 @@ func setUpBoard(rows: Array) -> void:
 	scenePath.name = "EnemyPath"
 	scenePath.curve = curve
 	
-	# Place Collector tower near the goal
-	place_collector_tower(rows, goal, tiles_root)
+	# Collector tower will be placed manually by player when unlocked
+	# place_collector_tower(rows, goal, tiles_root)
 	
-	# Create all light beams
+	# Create light beams only for unlocked colors
+	var player_controller = get_tree().get_first_node_in_group("player_controller")
+	var unlocked_colors = ["red"]  # Default fallback
+	if player_controller:
+		unlocked_colors = player_controller.unlocked_beam_colors
+	
+	var beam_index = 0
 	for i in range(NUM_RAYS):
-		var board_height = rows.size() * hex_size * 1.5
-		var beam_y = 1  # Slightly above ground
-		var spacing_vertical = board_height / float(NUM_RAYS + 1)
-		var start_z = spacing_vertical * (i + 1)
-		var beam_color_enum = i as Globals.BeamColor  # Use enum index
+		var beam_color_enum = i as Globals.BeamColor
+		var color_name = get_color_name_from_enum(beam_color_enum)
+		
+		# Only create beam if color is unlocked
+		if color_name in unlocked_colors:
+			var board_height = rows.size() * hex_size * 1.5
+			var beam_y = 1  # Slightly above ground
+			var spacing_vertical = board_height / float(NUM_RAYS + 1)
+			var start_z = spacing_vertical * (beam_index + 1)
 
-		var beam_instance := beam.instantiate()
-		beam_instance.initialize(self, beam_color_enum, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[i])
-		add_child(beam_instance)
-		beams.append(beam_instance)
+			var beam_instance := beam.instantiate()
+			beam_instance.initialize(self, beam_color_enum, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[beam_index])
+			add_child(beam_instance)
+			beams.append(beam_instance)
+			beam_index += 1
+
+func get_color_name_from_enum(beam_color_enum: Globals.BeamColor) -> String:
+	match beam_color_enum:
+		Globals.BeamColor.RED:
+			return "red"
+		Globals.BeamColor.ORANGE:
+			return "orange"
+		Globals.BeamColor.YELLOW:
+			return "yellow"
+		Globals.BeamColor.GREEN:
+			return "green"
+		Globals.BeamColor.CYAN:
+			return "cyan"
+		Globals.BeamColor.BLUE:
+			return "blue"
+		Globals.BeamColor.PURPLE:
+			return "purple"
+		_:
+			return "red"  # Default fallback
+
+func refresh_beams_for_unlocked_colors():
+	print("Board: Refreshing beams for unlocked colors")
 	
+	# Get current unlocked colors from player controller
+	var player_controller = get_tree().get_first_node_in_group("player_controller")
+	if not player_controller:
+		print("ERROR: Could not find player controller")
+		return
+	
+	var unlocked_colors = player_controller.unlocked_beam_colors
+	print("Current unlocked colors: ", unlocked_colors)
+	
+	# Remove all existing beams
+	for beam_instance in beams:
+		if is_instance_valid(beam_instance):
+			beam_instance.queue_free()
+	beams.clear()
+	
+	# Define beam keys (same as in setUpBoard)
+	var beam_keys = [KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_H, KEY_J]
+	
+	# Recreate beams for unlocked colors only
+	var beam_index = 0
+	for i in range(NUM_RAYS):
+		var beam_color_enum = i as Globals.BeamColor
+		var color_name = get_color_name_from_enum(beam_color_enum)
+		
+		# Only create beam if color is unlocked
+		if color_name in unlocked_colors:
+			var board_height = 8 * hex_size * 1.5  # Assuming 8 rows like in original setup
+			var beam_y = 1  # Slightly above ground
+			var spacing_vertical = board_height / float(NUM_RAYS + 1)
+			var start_z = spacing_vertical * (beam_index + 1)
+
+			var beam_instance := beam.instantiate()
+			beam_instance.initialize(self, beam_color_enum, Vector3(0.0, beam_y, start_z), Vector2(1, 0), beam_keys[beam_index])
+			add_child(beam_instance)
+			beams.append(beam_instance)
+			beam_index += 1
+			print("Created beam for color: ", color_name)
+	
+	print("Beam refresh complete. Total beams: ", beams.size())
 	
 # ===== Helpers: pointy-top, odd-r layout =====
 func _hex_center(col: int, row: int) -> Vector3:

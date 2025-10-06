@@ -5,7 +5,9 @@ extends Node3D
 @export var hud: Control
 @export var level: Level
 @export var camera_rig: Node3D
+@export var choose_three_container: HBoxContainer
 @export var max_active_beams: int = 2  # Maximum number of beams that can be active at once
+@export var color_ratio_box: Control
 
 # State tracking
 var right_mouse_was_pressed: bool = false
@@ -41,12 +43,31 @@ var tower_option_control: Control = null
 var mirror_option_button: Button = null
 var concave_option_button: Button = null
 var convex_option_button: Button = null
+var collector_option_button: Button = null
 var move_button: Button = null
 var tower_name_label: RichTextLabel = null
+
+# Upgrade system
+var upgrade_panels: Array[ColorRect] = []
+var upgrade_name_labels: Array[RichTextLabel] = []
+var upgrade_desc_labels: Array[RichTextLabel] = []
+var choose_buttons: Array[Button] = []
+var current_upgrade_choices: Array = []  # Store the current displayed upgrades
+
+# Player progression
+var unlocked_beam_colors: Array[String] = ["red"]  # Start with red only
+var unlocked_tower_types: Array[String] = ["mirror"]  # Start with mirrors only
+var ccollector_tower_unlocked: bool = false
+var collector_tower_placed: bool = false
 
 func _ready():
 	# Add to group for HUD to find
 	add_to_group("player_controller")
+	
+	# Connect to wave system
+	var enemy_controller = get_tree().get_first_node_in_group("enemy_controller")
+	if enemy_controller:
+		enemy_controller.all_enemies_cleared.connect(_on_wave_completed)
 	
 	# Find the tower option buttons from HUD
 	if hud:
@@ -55,6 +76,7 @@ func _ready():
 			mirror_option_button = tower_option_control.get_node_or_null("MirrorOption")
 			concave_option_button = tower_option_control.get_node_or_null("ConcaveOption")
 			convex_option_button = tower_option_control.get_node_or_null("ConvexOption")
+			collector_option_button = tower_option_control.get_node_or_null("CollectorOption")
 			
 			# Connect button signals
 			if mirror_option_button:
@@ -63,6 +85,8 @@ func _ready():
 				concave_option_button.toggled.connect(_on_concave_option_toggled)
 			if convex_option_button:
 				convex_option_button.toggled.connect(_on_convex_option_toggled)
+			if collector_option_button:
+				collector_option_button.toggled.connect(_on_collector_option_toggled)
 		else:
 			print("WARNING: TowerOption control not found in HUD")
 		
@@ -77,6 +101,15 @@ func _ready():
 		tower_name_label = hud.get_node_or_null("TowerControls/TowerName")
 		if not tower_name_label:
 			print("WARNING: TowerName label not found in HUD")
+		
+		# Find ChooseThree upgrade interface
+		setup_choose_three_interface()
+		
+		# Hide color ratio container initially and update UI based on initial progression state
+		if color_ratio_box:
+			color_ratio_box.visible = false
+		
+		update_progression_ui()
 	else:
 		print("WARNING: HUD reference not set in PlayerController")
 
@@ -87,16 +120,27 @@ func _process(_delta):
 	handle_beam_activation()
 	handle_camera_controls()
 	handle_player_controls()
+	
+	# Debug: Test upgrade interface with U key
+	if Input.is_action_just_pressed("ui_up"):  # U key for testing
+		print("DEBUG: Manually triggering upgrade interface")
+		show_upgrade_choices()
 
 func get_selected_tower_type() -> String:
-	# Check which button is pressed
-	if mirror_option_button and mirror_option_button.button_pressed:
+	# Check which button is pressed and if tower type is unlocked
+	if mirror_option_button and mirror_option_button.button_pressed and "mirror" in unlocked_tower_types:
 		return "mirror"
-	elif concave_option_button and concave_option_button.button_pressed:
+	elif concave_option_button and concave_option_button.button_pressed and "concave_lens" in unlocked_tower_types:
 		return "concave_lens"
-	elif convex_option_button and convex_option_button.button_pressed:
+	elif convex_option_button and convex_option_button.button_pressed and "convex_lens" in unlocked_tower_types:
 		return "convex_lens"
-	return "mirror"  # Default fallback
+	elif collector_option_button and collector_option_button.button_pressed and ccollector_tower_unlocked and not collector_tower_placed:
+		return "collector"
+	
+	# Return first unlocked tower type as fallback
+	if unlocked_tower_types.size() > 0:
+		return unlocked_tower_types[0]
+	return "mirror"  # Ultimate fallback
 
 func handle_beam_activation() -> void:
 	if not level:
@@ -287,9 +331,15 @@ func handle_player_controls():
 	if is_panning or is_rotating:
 		return
 	
-	if Input.is_action_just_pressed("interact"):
-		if mouse_over_obj and mouse_over_obj.is_in_group("emptyTile"):
-			print(mouse_over_obj.get_children())
+	elif Input.is_action_just_pressed("interact"):
+		# Block tower placement when ChooseThree interface is visible
+		if choose_three_container and choose_three_container.visible:
+			return
+			
+		if dragging_tower:
+			stop_dragging(mouse_over_obj)
+		elif mouse_over_obj and mouse_over_obj.is_in_group("emptyTile"):
+			# Check if tile already has a tower
 			for child in mouse_over_obj.get_children():
 				if child.is_in_group("tower_line") and child is TowerLine:
 					cancel_dragging()
@@ -300,18 +350,33 @@ func handle_player_controls():
 			else:
 				# Get selected tower type from dropdown
 				var tower_type = get_selected_tower_type()
-				select_tower(Globals.create_tower(tower_type, mouse_over_obj))
+				var new_tower = Globals.create_tower(tower_type, mouse_over_obj)
+				select_tower(new_tower)
+				
+				# Check if collector tower was placed
+				if tower_type == "collector":
+					collector_tower_placed = true
+					print("Collector tower placed! Disabling collector button.")
+					update_progression_ui()
 		elif mouse_over_obj is TowerLine:
 			cancel_dragging()
 			select_tower(mouse_over_obj)
 		return
 
 	elif Input.is_action_just_pressed("interact_2"):
+		# Block tower interactions when ChooseThree interface is visible
+		if choose_three_container and choose_three_container.visible:
+			return
+			
 		if dragging_tower:
 			cancel_dragging()
 		return
 	
 	elif Input.is_action_just_pressed("toggle_move"):
+		# Block tower interactions when ChooseThree interface is visible
+		if choose_three_container and choose_three_container.visible:
+			return
+			
 		if dragging_tower:
 			cancel_dragging()
 		elif selected_tower and is_instance_valid(selected_tower):
@@ -427,6 +492,8 @@ func _on_mirror_option_toggled(pressed: bool):
 			concave_option_button.button_pressed = false
 		if convex_option_button:
 			convex_option_button.button_pressed = false
+		if collector_option_button:
+			collector_option_button.button_pressed = false
 
 func _on_concave_option_toggled(pressed: bool):
 	if pressed:
@@ -435,20 +502,33 @@ func _on_concave_option_toggled(pressed: bool):
 			mirror_option_button.button_pressed = false
 		if convex_option_button:
 			convex_option_button.button_pressed = false
+		if collector_option_button:
+			collector_option_button.button_pressed = false
 
-func _on_convex_option_toggled(pressed: bool):
-	if pressed:
-		# Unpress other buttons
+func _on_convex_option_toggled(button_pressed: bool):
+	if button_pressed:
+		# Deselect other buttons
 		if mirror_option_button:
 			mirror_option_button.button_pressed = false
 		if concave_option_button:
 			concave_option_button.button_pressed = false
+		if collector_option_button:
+			collector_option_button.button_pressed = false
+
+func _on_collector_option_toggled(button_pressed: bool):
+	if button_pressed:
+		# Deselect other buttons
+		if mirror_option_button:
+			mirror_option_button.button_pressed = false
+		if concave_option_button:
+			concave_option_button.button_pressed = false
+		if convex_option_button:
+			convex_option_button.button_pressed = false
 
 func _on_move_button_pressed():
 	# Activate move mode (same as pressing M key)
 	if dragging_tower:
 		cancel_dragging()
-	elif selected_tower and is_instance_valid(selected_tower):
 		start_dragging(selected_tower, selected_tower.global_position)
 
 func update_tower_name_display():
@@ -462,3 +542,166 @@ func update_tower_name_display():
 	else:
 		# Clear the display when no tower is selected
 		tower_name_label.text = ""
+
+# Upgrade system functions
+func setup_choose_three_interface():
+		# Find the three panels and their labels
+	for i in range(3):
+		var panel = choose_three_container.get_child(i) as ColorRect
+		if panel:
+			print("Found panel ", i)
+			upgrade_panels.append(panel)
+			
+			var name_label = panel.get_node_or_null("UpgradeName") as RichTextLabel
+			var desc_label = panel.get_node_or_null("UpgradeDesc") as RichTextLabel
+			var choose_button = panel.get_node_or_null("ChooseButton") as Button
+			
+			upgrade_name_labels.append(name_label)
+			upgrade_desc_labels.append(desc_label)
+			choose_buttons.append(choose_button)
+			
+			# Connect button click
+			if choose_button:
+				print("Connecting button ", i)
+				choose_button.pressed.connect(_on_choose_button_pressed.bind(i))
+			else:
+				print("ERROR: ChooseButton not found in panel ", i)
+	
+	# Hide initially
+	choose_three_container.visible = false
+
+func show_upgrade_choices():
+	print("show_upgrade_choices called")
+	if not choose_three_container:
+		print("ERROR: choose_three_container is null")
+		return
+	
+	var available_upgrades = get_available_upgrades()
+	print("Available upgrades: ", available_upgrades.size())
+	available_upgrades.shuffle()
+	
+	# Store the shuffled upgrades for later use
+	current_upgrade_choices.clear()
+	for i in range(min(3, available_upgrades.size())):
+		current_upgrade_choices.append(available_upgrades[i])
+	
+	# Show up to 3 random upgrades
+	for i in range(current_upgrade_choices.size()):
+		var upgrade = current_upgrade_choices[i]
+		print("Setting upgrade ", i, ": ", upgrade.name)
+		
+		if i < upgrade_name_labels.size() and upgrade_name_labels[i]:
+			upgrade_name_labels[i].text = upgrade.name
+		if i < upgrade_desc_labels.size() and upgrade_desc_labels[i]:
+			upgrade_desc_labels[i].text = upgrade.description
+	
+	print("Making ChooseThree visible")
+	choose_three_container.visible = true
+
+func get_available_upgrades() -> Array:
+	var upgrades = []
+	
+	# Beam color upgrades (matching the actual enum order)
+	var beam_descriptions = {
+		"orange": "30% direct damage + applies Burn DOT (4 dmg/sec per stack)",
+		"yellow": "100% damage + scatters 4 beams (40% dmg each) for AOE",
+		"green": "0% direct damage + applies Poison DOT (1.5 dmg/sec per stack)",
+		"cyan": "0% direct damage + applies Weakened (1.1× dmg taken per stack)",
+		"blue": "0% direct damage + applies Frozen (15% slow per stack)",
+		"purple": "100% damage + 50% bonus damage vs Frozen enemies"
+	}
+	
+	var all_colors = ["orange", "yellow", "green", "cyan", "blue", "purple"]
+	for color in all_colors:
+		if color not in unlocked_beam_colors:
+			upgrades.append({
+				"name": color.capitalize() + " Beam",
+				"description": beam_descriptions[color],
+				"type": "beam_color",
+				"value": color
+			})
+	
+	# Tower type upgrades
+	if "concave_lens" not in unlocked_tower_types:
+		upgrades.append({
+			"name": "Concave Lens",
+			"description": "Spreads beams wider for area coverage",
+			"type": "tower_type",
+			"value": "concave_lens"
+		})
+	
+	if "convex_lens" not in unlocked_tower_types:
+		upgrades.append({
+			"name": "Convex Lens", 
+			"description": "Focuses beams for concentrated damage",
+			"type": "tower_type",
+			"value": "convex_lens"
+		})
+	
+	# Ccollector tower upgrade
+	if not ccollector_tower_unlocked:
+		upgrades.append({
+			"name": "Collector Tower",
+			"description": "Enables color mixing and balance multipliers",
+			"type": "ccollector_tower",
+			"value": true
+		})
+	
+	return upgrades
+
+func _on_choose_button_pressed(panel_index: int):
+	print("Button ", panel_index, " pressed!")
+	apply_upgrade(panel_index)
+
+func apply_upgrade(panel_index: int):
+	print("Applying upgrade for panel ", panel_index, ", stored choices: ", current_upgrade_choices.size())
+	
+	if panel_index >= current_upgrade_choices.size():
+		print("ERROR: Panel index out of range")
+		return
+	
+	var upgrade = current_upgrade_choices[panel_index]
+	print("Applying upgrade: ", upgrade.name, " (", upgrade.type, ")")
+	
+	match upgrade.type:
+		"beam_color":
+			unlocked_beam_colors.append(upgrade.value)
+			print("Unlocked ", upgrade.value, " beam. Total unlocked colors: ", unlocked_beam_colors)
+			# Refresh beams to add new color
+			refresh_beams()
+		"tower_type":
+			unlocked_tower_types.append(upgrade.value)
+			print("Unlocked ", upgrade.value, " tower. Total unlocked towers: ", unlocked_tower_types)
+		"ccollector_tower":
+			ccollector_tower_unlocked = true
+			print("Unlocked ccollector tower")
+	
+	# Update UI to reflect new unlocks
+	update_progression_ui()
+	
+	# Hide upgrade interface
+	choose_three_container.visible = false
+
+func update_progression_ui():
+	# Update tower option buttons based on unlocked types
+	if concave_option_button:
+		concave_option_button.disabled = "concave_lens" not in unlocked_tower_types
+	if convex_option_button:
+		convex_option_button.disabled = "convex_lens" not in unlocked_tower_types
+	if collector_option_button:
+		collector_option_button.disabled = not ccollector_tower_unlocked or collector_tower_placed
+	
+	# Hide/show color ratio bar based on ccollector tower unlock AND placement
+	if color_ratio_box:
+		color_ratio_box.visible = ccollector_tower_unlocked and collector_tower_placed
+
+func refresh_beams():
+	print("Refreshing beams with new unlocked colors...")
+	# Get the board and tell it to refresh its beams
+	if level and level.board:
+		level.board.refresh_beams_for_unlocked_colors()
+
+func _on_wave_completed():
+	print("Wave completed! Showing upgrade choices...")
+	# Show upgrade choices after each wave
+	show_upgrade_choices()

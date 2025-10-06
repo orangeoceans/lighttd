@@ -14,11 +14,13 @@ script = ExtResource("1_p57ef")
 hud = NodePath("../HUD")
 level = NodePath("../Level")
 
-[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level", "camera_rig")]
+[node name="PlayerController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level", "camera_rig", "choose_three_container", "color_ratio_box")]
 script = ExtResource("4_lbhrr")
 hud = NodePath("../HUD")
 level = NodePath("../Level")
 camera_rig = NodePath("../CameraRig")
+choose_three_container = NodePath("../HUD/ChooseThree/ChooseThreeContainer")
+color_ratio_box = NodePath("../HUD/TopBar/ColorRatioBox")
 
 [node name="Level" parent="." instance=ExtResource("1_yqjtg")]
 
@@ -39,7 +41,13 @@ offset_top = 8.0
 offset_right = 457.0
 offset_bottom = 48.0
 
-[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/TopBar" node_paths=PackedStringArray("multiplier_label")]
+[node name="ColorRatioBox" type="Control" parent="HUD/TopBar"]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/TopBar/ColorRatioBox" node_paths=PackedStringArray("multiplier_label")]
 layout_mode = 0
 offset_left = -406.0
 offset_top = 1.0
@@ -48,7 +56,7 @@ offset_bottom = 26.0
 script = ExtResource("5_iywne")
 multiplier_label = NodePath("../ColorRatioMultiplierLabel")
 
-[node name="ColorRatioMultiplierLabel" type="RichTextLabel" parent="HUD/TopBar"]
+[node name="ColorRatioMultiplierLabel" type="RichTextLabel" parent="HUD/TopBar/ColorRatioBox"]
 layout_mode = 0
 offset_left = -186.0
 offset_top = 3.0
@@ -88,6 +96,15 @@ offset_bottom = 121.0
 toggle_mode = true
 text = "Convex"
 
+[node name="CollectorOption" type="Button" parent="HUD/TopBar/TowerOption"]
+layout_mode = 0
+offset_left = 757.0
+offset_top = 127.0
+offset_right = 856.0
+offset_bottom = 163.0
+toggle_mode = true
+text = "Collector"
+
 [node name="TowerControls" type="Control" parent="HUD"]
 anchors_preset = 0
 offset_left = 1071.0
@@ -117,6 +134,7 @@ offset_bottom = 18.0
 text = "Tower Rotation"
 
 [node name="MoveButton" type="Button" parent="HUD/TowerControls"]
+layout_mode = 0
 offset_left = 90.0
 offset_top = 20.0
 offset_right = 200.0
@@ -165,25 +183,25 @@ theme_override_font_sizes/normal_font_size = 48
 text = "WAVE 1"
 
 [node name="ChooseThree" type="Control" parent="HUD"]
-visible = false
 anchors_preset = 0
 offset_left = 314.0
 offset_top = 148.0
 offset_right = 354.0
 offset_bottom = 188.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HUD/ChooseThree"]
+[node name="ChooseThreeContainer" type="HBoxContainer" parent="HUD/ChooseThree"]
+visible = false
 layout_mode = 0
 offset_right = 658.0
 offset_bottom = 398.0
 theme_override_constants/separation = 20
 
-[node name="Panel1" type="ColorRect" parent="HUD/ChooseThree/HBoxContainer"]
+[node name="Panel1" type="ColorRect" parent="HUD/ChooseThree/ChooseThreeContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 color = Color(0.901961, 0.882353, 0.992157, 1)
 
-[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel1"]
+[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel1"]
 layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
@@ -195,23 +213,34 @@ text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel1"]
+[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel1"]
+layout_mode = 0
 offset_left = 14.0
-offset_top = 180.0
+offset_top = 100.0
 offset_right = 192.0
-offset_bottom = 380.0
+offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Panel2" type="ColorRect" parent="HUD/ChooseThree/HBoxContainer"]
+[node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel1"]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 334.0
+offset_right = 153.0
+offset_bottom = 376.0
+theme_override_font_sizes/font_size = 24
+text = "Select"
+
+[node name="Panel2" type="ColorRect" parent="HUD/ChooseThree/ChooseThreeContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 color = Color(0.901961, 0.882353, 0.992157, 1)
 
-[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel2"]
+[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel2"]
+layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
 offset_right = 192.0
@@ -222,23 +251,34 @@ text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel2"]
+[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel2"]
+layout_mode = 0
 offset_left = 14.0
-offset_top = 180.0
+offset_top = 100.0
 offset_right = 192.0
-offset_bottom = 380.0
+offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Panel3" type="ColorRect" parent="HUD/ChooseThree/HBoxContainer"]
+[node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel2"]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 334.0
+offset_right = 153.0
+offset_bottom = 376.0
+theme_override_font_sizes/font_size = 24
+text = "Select"
+
+[node name="Panel3" type="ColorRect" parent="HUD/ChooseThree/ChooseThreeContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 color = Color(0.901961, 0.882353, 0.992157, 1)
 
-[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel3"]
+[node name="UpgradeName" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel3"]
+layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
 offset_right = 192.0
@@ -249,13 +289,23 @@ text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/HBoxContainer/Panel3"]
+[node name="UpgradeDesc" type="RichTextLabel" parent="HUD/ChooseThree/ChooseThreeContainer/Panel3"]
+layout_mode = 0
 offset_left = 14.0
-offset_top = 180.0
+offset_top = 100.0
 offset_right = 192.0
-offset_bottom = 380.0
+offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel3"]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 334.0
+offset_right = 153.0
+offset_bottom = 376.0
+theme_override_font_sizes/font_size = 24
+text = "Select"

@@ -216,10 +216,12 @@ func update_light_path() -> void:
 			# Apply lens/mirror/collector effect for next segment
 			if hit_info.tower_type == "collector":
 				# Collector: absorb the beam (stop tracing)
-				# Only increment count if this is the active beam
+				# Only increment count if this is the active beam AND wave is active
 				if is_active:
-					Globals.increment_beam_count(beam_color_enum, 1.0)
-					# print("Collector absorbed ", beam_color_enum, " beam! Total counts: ", Globals.collector_beam_counts)
+					var enemy_controller = get_tree().get_first_node_in_group("enemy_controller")
+					if enemy_controller and enemy_controller.wave_active:
+						Globals.increment_beam_count(beam_color_enum, 1.0)
+						# print("Collector absorbed ", beam_color_enum, " beam! Total counts: ", Globals.collector_beam_counts)
 				break
 			elif hit_info.tower_type == "convex_lens":
 				# Convex lens: narrow the beam instantly
