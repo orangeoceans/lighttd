@@ -69,41 +69,57 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
+[node name="TowerOptionsBG" type="ColorRect" parent="HUD/TopBar/TowerOption"]
+offset_left = 737.0
+offset_top = -8.0
+offset_right = 863.0
+offset_bottom = 216.0
+color = Color(0.811765, 0.552941, 0.568627, 0.239216)
+
 [node name="MirrorOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 1.0
+offset_top = 32.0
 offset_right = 856.0
-offset_bottom = 37.0
+offset_bottom = 68.0
 toggle_mode = true
 text = "Mirror"
 
 [node name="ConcaveOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 43.0
+offset_top = 74.0
 offset_right = 856.0
-offset_bottom = 79.0
+offset_bottom = 110.0
 toggle_mode = true
 text = "Concave"
 
 [node name="ConvexOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 85.0
+offset_top = 116.0
 offset_right = 856.0
-offset_bottom = 121.0
+offset_bottom = 152.0
 toggle_mode = true
 text = "Convex"
 
 [node name="CollectorOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 127.0
+offset_top = 158.0
 offset_right = 856.0
-offset_bottom = 163.0
+offset_bottom = 194.0
 toggle_mode = true
 text = "Collector"
+
+[node name="RichTextLabel" type="RichTextLabel" parent="HUD/TopBar/TowerOption"]
+layout_mode = 0
+offset_left = 755.0
+offset_right = 855.0
+offset_bottom = 35.0
+theme_override_font_sizes/normal_font_size = 18
+text = "Build"
+horizontal_alignment = 1
 
 [node name="TowerControls" type="Control" parent="HUD"]
 anchors_preset = 0
@@ -111,6 +127,14 @@ offset_left = 1071.0
 offset_top = 649.0
 offset_right = 1111.0
 offset_bottom = 689.0
+
+[node name="TowerControlsBG" type="ColorRect" parent="HUD/TowerControls"]
+layout_mode = 0
+offset_left = -147.0
+offset_top = -46.0
+offset_right = 209.0
+offset_bottom = 71.0
+color = Color(0.811765, 0.552941, 0.568627, 0.239216)
 
 [node name="MirrorControls" type="Control" parent="HUD/TowerControls"]
 anchors_preset = 0
@@ -141,13 +165,20 @@ offset_right = 200.0
 offset_bottom = 62.0
 text = "Move (M)"
 
+[node name="DeleteButton" type="Button" parent="HUD/TowerControls"]
+layout_mode = 0
+offset_left = 90.0
+offset_top = -31.0
+offset_right = 200.0
+offset_bottom = 11.0
+text = "Delete"
+
 [node name="TowerName" type="RichTextLabel" parent="HUD/TowerControls"]
 layout_mode = 0
-offset_left = 91.0
-offset_top = -10.0
-offset_right = 198.0
-offset_bottom = 14.0
-horizontal_alignment = 2
+offset_left = -120.0
+offset_top = -29.0
+offset_right = -13.0
+offset_bottom = -5.0
 
 [node name="BottomBar" type="Control" parent="HUD"]
 anchors_preset = 0
@@ -309,3 +340,49 @@ offset_right = 153.0
 offset_bottom = 376.0
 theme_override_font_sizes/font_size = 24
 text = "Select"
+
+[node name="Tutorial" type="Control" parent="HUD"]
+anchors_preset = 0
+offset_left = 430.0
+offset_top = 97.0
+offset_right = 470.0
+offset_bottom = 137.0
+
+[node name="Panel1" type="ColorRect" parent="HUD/Tutorial"]
+offset_right = 428.0
+offset_bottom = 430.0
+size_flags_horizontal = 3
+color = Color(0.901961, 0.882353, 0.992157, 1)
+
+[node name="TutorialTitle" type="RichTextLabel" parent="HUD/Tutorial"]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 14.0
+offset_right = 413.0
+offset_bottom = 77.0
+theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_font_sizes/normal_font_size = 20
+text = "asdfasdfasdfasdf"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TutorialDesc" type="RichTextLabel" parent="HUD/Tutorial"]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 103.0
+offset_right = 413.0
+offset_bottom = 303.0
+theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_font_sizes/normal_font_size = 20
+text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OKButton" type="Button" parent="HUD/Tutorial"]
+layout_mode = 0
+offset_left = 163.0
+offset_top = 355.0
+offset_right = 265.0
+offset_bottom = 397.0
+theme_override_font_sizes/font_size = 24
+text = "OK"
