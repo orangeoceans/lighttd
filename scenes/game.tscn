@@ -81,10 +81,19 @@ offset_top = 306.0
 offset_right = 51.0
 offset_bottom = 346.0
 
-[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/BottomBar"]
+[node name="ColorRatioContainer" type="HBoxContainer" parent="HUD/BottomBar" node_paths=PackedStringArray("multiplier_label")]
 layout_mode = 0
 offset_right = 210.0
 offset_bottom = 34.0
 script = ExtResource("5_iywne")
+multiplier_label = NodePath("../ColorRatioMultiplierLabel")
+
+[node name="ColorRatioMultiplierLabel" type="RichTextLabel" parent="HUD/BottomBar"]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 4.0
+offset_right = 280.0
+offset_bottom = 44.0
+text = "x1"
 
 [editable path="CameraRig"]

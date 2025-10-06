@@ -177,15 +177,17 @@ func process_burn(effect_data: Dictionary, delta: float) -> void:
 	# Recalculate stacks based on decayed accumulation
 	effect_data.stacks = convert_accumulated_to_stacks(effect_data.accumulated)
 	
-	# Apply continuous damage based on current stacks
+	# Apply continuous damage based on current stacks with balance multiplier
 	if effect_data.stacks > 0:
-		var damage = BURN_DAMAGE_PER_STACK * effect_data.stacks * delta
+		var balance_multiplier = Globals.get_balance_multiplier()
+		var damage = BURN_DAMAGE_PER_STACK * effect_data.stacks * balance_multiplier * delta
 		take_damage(damage, false)  # Don't apply weakened to DOT
 
 func process_poison(effect_data: Dictionary, delta: float) -> void:
-	# Apply continuous damage based on stacks
+	# Apply continuous damage based on stacks with balance multiplier
 	if effect_data.stacks > 0:
-		var damage = POISON_DAMAGE_PER_STACK * effect_data.stacks * delta
+		var balance_multiplier = Globals.get_balance_multiplier()
+		var damage = POISON_DAMAGE_PER_STACK * effect_data.stacks * balance_multiplier * delta
 		take_damage(damage, false)  # Don't apply weakened to DOT
 
 func process_freeze(effect_data: Dictionary, delta: float) -> void:

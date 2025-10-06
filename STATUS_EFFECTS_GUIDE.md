@@ -1,7 +1,7 @@
 # Status Effects System Guide
 
 ## Overview
-A comprehensive stacking status effect system for enemies with logarithmic scaling.
+A comprehensive stacking status effect system for enemies with logarithmic scaling and a global balance multiplier system that rewards beam diversity.
 
 ## Status Effects
 
@@ -91,19 +91,50 @@ var poison_stacks = enemy.get_status_stacks(enemy.StatusEffect.POISONED)
 print("Poison stacks: ", poison_stacks)
 ```
 
+## Balance Multiplier System 🌈
+
+**All damage (beams, burn, poison) is multiplied by a balance bonus based on beam color diversity!**
+
+### How It Works:
+
+The system measures how evenly distributed your beam colors are using **Shannon entropy**:
+
+- **1.0× multiplier** (no bonus) when one color dominates the collector bar
+- **Up to 10.0× multiplier** when all 7 colors are perfectly balanced
+- Multiplier scales smoothly between these extremes
+
+### Balance Examples:
+
+| Beam Distribution | Entropy | Multiplier | Effect |
+|-------------------|---------|------------|--------|
+| 100% Red only | 0% | **1.0×** | No bonus |
+| 50% Red, 50% Blue | 36% | **1.4×** | Minimal bonus |
+| Equal mix of 4 colors | 71% | **4.6×** | Good! |
+| Equal mix of 6 colors | 93% | **7.2×** | Great! |
+| Equal mix of all 7 colors | 100% | **10.0×** | Perfect! |
+
+### Strategy Tips:
+
+✅ **Diversify your beams** - Use all 7 colors for maximum damage  
+✅ **Balance matters more than quantity** - Even small amounts of each color help  
+✅ **Affects everything** - Direct damage, burn, poison all benefit  
+✅ **Real-time feedback** - Watch the collector bar to see your balance  
+
+**Example:** A balanced rainbow setup deals 10× the damage of a mono-color setup!
+
 ## Beam Color to Status Effect Mapping
 
 The beams have different damage profiles and status effects:
 
 | Beam | Direct Damage | Status Effect | Special | Role |
 |------|--------------|---------------|---------|------|
-| 🔴 **Red** | 100% | None | - | Pure DPS |
+| 🔴 **Red** | 100% | None | **+50% vs Burned** enemies | Pure DPS / Burn finisher |
 | 🟠 **Orange** | 30% | 🔥 Burned | - | DOT hybrid |
-| 🟡 **Yellow** | 100% | None | **Scatters** 5 beams (40% dmg, 3.0 range) | AOE DPS |
+| 🟡 **Yellow** | 100% | None | **Scatters** 4 beams (40% dmg, bounces) | AOE DPS |
 | 🟢 **Green** | 0% | ☠️ Poisoned | - | Pure DOT |
 | 🔵 **Cyan** | 0% | 💔 Weakened | - | Pure support |
 | 🔷 **Blue** | 0% | ❄️ Frozen | - | Pure CC |
-| 🟣 **Purple** | 100% | None | - | Pure DPS |
+| 🟣 **Purple** | 100% | None | **+50% vs Frozen** enemies | Pure DPS / Freeze finisher |
 
 ### Strategic Synergies
 
@@ -120,11 +151,23 @@ The beams have different damage profiles and status effects:
 
 **Combo 3: Yellow Scatter AOE**
 - 🟡 Yellow beam hits enemy with 100% damage
-- Creates 5 scatter beams in random directions (3.0 range)
+- Creates 4 scatter beams in random directions (bounce off mirrors)
 - Each scatter beam does 40% damage to other enemies
 - Perfect for grouped enemies - massive AOE potential!
 
-**Combo 4: Burn Hybrid**
+**Combo 4: Burn + Red Finisher**
+- 🟠 Orange applies burn stacks (30% direct damage)
+- Switch to 🔴 Red beam for 100% × 1.5 = **150% damage!**
+- Red beam benefits from both burn DOT and bonus damage
+- Best for high-HP enemies
+
+**Combo 5: Freeze + Purple Finisher**
+- 🔷 Blue applies freeze stacks (0% direct damage, slows enemy)
+- Switch to 🟣 Purple beam for 100% × 1.5 = **150% damage!**
+- Enemy is slowed AND takes bonus damage
+- Excellent for kiting dangerous enemies
+
+**Combo 6: Burn Hybrid**
 - 🟠 Orange does modest direct damage (30%)
 - Plus burn DOT that decays over time
 - Good for spreading damage across multiple enemies
@@ -133,23 +176,23 @@ The beams have different damage profiles and status effects:
 
 When a **Yellow beam** hits an enemy:
 1. **Main beam** deals 100% damage to the target
-2. **5 scatter beams** radiate from the hit enemy in consistent random directions
+2. **4 scatter beams** radiate from the hit enemy in consistent random directions
 3. Each scatter beam:
    - Traces through the board like a full beam
    - **Bounces off mirrors** and interacts with lenses/collectors
    - Can have up to 20 bounces (same as main beam)
    - Deals 40% of base beam damage
    - Can hit other enemies (not the original target)
-   - Is thin (0.15 width) for precise targeting
+   - Is thin (0.1 width) for precise targeting
    - Direction is random but **consistent per enemy** (doesn't flicker between frames)
 
 **Example:** Yellow beam hits enemy in a group of 5 enemies
 - Primary target: 100% damage
-- 4 nearby enemies: Each has ~2-3 scatter beams potentially hitting them
+- 4 nearby enemies: Each has ~2 scatter beams potentially hitting them
 - Scatter beams bounce off mirrors, potentially hitting enemies around corners
-- Total damage distributed: 100% + (5 beams × 40% × 2-3 hits) = 500-700% total damage potential!
+- Total damage distributed: 100% + (4 beams × 40% × 2 hits) = 420% total damage potential!
 
-**Visual:** Scatter beams appear as thin, semi-transparent yellow beams (60% brightness, 50% opacity) extending from hit enemies like lightning arcs, bouncing off mirrors.
+**Visual:** Scatter beams appear as thin, semi-transparent yellow beams (60% brightness, 30% opacity) extending from hit enemies like lightning arcs, bouncing off mirrors.
 
 **Advanced Strategy:** Position mirrors to redirect scatter beams toward enemy clusters for maximum coverage!
 

@@ -46,7 +46,15 @@ static func get_beam_color(beam_color: BeamColor) -> Color:
 
 var collector_tower_instance: TowerLine = null  # Track the single collector instance
 var collector_beam_counts: Dictionary = {}  # Track beam counts by BeamColor enum
-var collector_total_count: int = 1400  # Fixed total - stays constant after normalization
+var collector_total_count: int = 700  # Fixed total - stays constant after normalization
+
+# Balance multiplier settings
+const MAX_BALANCE_MULTIPLIER: float = 10.0  # Maximum damage boost at perfect balance
+const MIN_BALANCE_MULTIPLIER: float = 1.0   # No boost when unbalanced
+const TOTAL_BEAM_COLORS: int = 7            # Number of beam colors
+
+# Cached balance multiplier (recalculated only when beam counts change)
+var _cached_balance_multiplier: float = 10.0
 
 # Increment a beam color count and normalize all counts
 func increment_beam_count(beam_color_enum: BeamColor, increment_amount: float = 1.0) -> void:
@@ -66,6 +74,49 @@ func increment_beam_count(beam_color_enum: BeamColor, increment_amount: float = 
 		var scale_factor = float(collector_total_count) / current_total
 		for color in collector_beam_counts.keys():
 			collector_beam_counts[color] *= scale_factor
+	
+	# Recalculate cached balance multiplier
+	_update_balance_multiplier()
+
+# Get the cached balance multiplier (fast, no calculation)
+func get_balance_multiplier() -> float:
+	return _cached_balance_multiplier
+
+# Internal function to update the cached balance multiplier
+func _update_balance_multiplier() -> void:
+	if collector_beam_counts.is_empty():
+		_cached_balance_multiplier = MIN_BALANCE_MULTIPLIER
+		return
+	
+	# Calculate total count
+	var total = 0.0
+	for count in collector_beam_counts.values():
+		total += count
+	
+	if total <= 0:
+		_cached_balance_multiplier = MIN_BALANCE_MULTIPLIER
+		return
+	
+	# Calculate Shannon entropy
+	var entropy = 0.0
+	for count in collector_beam_counts.values():
+		if count > 0:
+			var proportion = count / total
+			entropy -= proportion * log(proportion) / log(2.0)  # log base 2
+	
+	# Maximum entropy occurs when all colors are equally distributed
+	# For 7 colors: max_entropy = log2(7) ≈ 2.807
+	var max_entropy = log(TOTAL_BEAM_COLORS) / log(2.0)
+	
+	# Normalize entropy to range [0, 1]
+	var normalized_entropy = entropy / max_entropy
+	
+	# Apply exponential curve: use ^3 to heavily favor near-perfect balance
+	# This makes 50/50 give ~1.4×, while perfect balance still gives 10×
+	var curved_value = pow(normalized_entropy, 6.0)
+	
+	# Map to multiplier range [1.0, 10.0]
+	_cached_balance_multiplier = MIN_BALANCE_MULTIPLIER + (MAX_BALANCE_MULTIPLIER - MIN_BALANCE_MULTIPLIER) * curved_value
 
 func create_tower(tower_type: String, tile: Node) -> TowerLine:
 	print("PLACING ", tower_type)

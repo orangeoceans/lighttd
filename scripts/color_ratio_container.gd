@@ -4,6 +4,8 @@ class_name ColorRatioContainer
 var color_rects: Array[ColorRect] = []
 var min_stretch_ratio: float = 0.0  # Minimum size for colors with 0 count
 
+@export var multiplier_label: RichTextLabel = null
+
 func _ready():
 	print("ColorRatioContainer _ready() called")
 	
@@ -17,7 +19,6 @@ func _ready():
 		color_rect.color = Globals.get_beam_color(beam_color_enum)
 		color_rect.size_flags_horizontal = SIZE_EXPAND_FILL
 		color_rect.size_flags_stretch_ratio = 1.0  # Start equal
-		# color_rect.custom_minimum_size = Vector2(5, 0)  # Minimum width
 		
 		add_child(color_rect)
 		color_rects.append(color_rect)
@@ -32,6 +33,8 @@ func update_ratios():
 	var counts = Globals.collector_beam_counts
 	
 	if counts.is_empty():
+		if multiplier_label:
+			multiplier_label.set_text("1.0×")
 		return  # No data yet
 	
 	# Calculate total count across all colors
@@ -40,6 +43,8 @@ func update_ratios():
 		total_count += counts[beam_color_enum]
 	
 	if total_count == 0:
+		if multiplier_label:
+			multiplier_label.set_text("1.0×")
 		return  # No beams absorbed yet
 	
 	# Update each ColorRect based on its enum index
@@ -56,3 +61,8 @@ func update_ratios():
 		else:
 			# Hide colors with no count
 			color_rects[i].size_flags_stretch_ratio = min_stretch_ratio
+	
+	# Update the balance multiplier label
+	if multiplier_label:
+		var balance_multiplier = Globals.get_balance_multiplier()
+		multiplier_label.set_text("%.1f×" % balance_multiplier)

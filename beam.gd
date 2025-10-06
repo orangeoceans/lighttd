@@ -35,6 +35,10 @@ var scatter_beam_count: int = 4
 var scatter_beam_damage_multiplier: float = 0.4  # 40% of main beam damage
 var scatter_beam_width: float = 0.1
 
+# Status effect damage bonuses
+var red_burn_bonus: float = 0.5  # Red beam +50% damage to burned enemies
+var purple_frozen_bonus: float = 0.5  # Purple beam +50% damage to frozen enemies
+
 func _process(delta: float) -> void:
 	if self.board == null:
 		return
@@ -370,7 +374,11 @@ func apply_beam_damage_to_enemies(delta: float) -> void:
 				var color_multiplier = get_damage_multiplier()
 				var damage = base_dps * width_ratio * damage_width_multiplier * color_multiplier * delta
 				
+				# Apply balance multiplier and status effect damage bonuses
 				if damage > 0:
+					var balance_multiplier = Globals.get_balance_multiplier()
+					var status_bonus = get_status_damage_bonus(enemy)
+					damage *= balance_multiplier * status_bonus
 					enemy.take_damage(damage)
 				
 				# Apply status effects based on beam color
@@ -471,12 +479,29 @@ func apply_scatter_beams(hit_enemies: Array, all_enemies: Array, delta: float) -
 					
 					var collision_radius = target_enemy.collision_radius if "collision_radius" in target_enemy else 0.5
 					if distance <= (scatter_beam_width + collision_radius):
-						# Apply reduced damage
-						var scatter_damage = base_dps * scatter_beam_damage_multiplier * delta
+						# Apply reduced damage with balance multiplier
+						var balance_multiplier = Globals.get_balance_multiplier()
+						var scatter_damage = base_dps * scatter_beam_damage_multiplier * balance_multiplier * delta
 						target_enemy.take_damage(scatter_damage)
 	
 	# Reset random seed to avoid affecting other random calls
 	randomize()
+
+func get_status_damage_bonus(enemy) -> float:
+	# Check for status effect damage bonuses
+	var bonus = 1.0
+	
+	# Red beam bonus on burned enemies
+	if beam_color_enum == Globals.BeamColor.RED:
+		if enemy.has_method("has_status") and enemy.has_status(enemy.StatusEffect.BURNED):
+			bonus += red_burn_bonus
+	
+	# Purple beam bonus on frozen enemies
+	elif beam_color_enum == Globals.BeamColor.PURPLE:
+		if enemy.has_method("has_status") and enemy.has_status(enemy.StatusEffect.FROZEN):
+			bonus += purple_frozen_bonus
+	
+	return bonus
 
 func get_damage_multiplier() -> float:
 	# Different beams have different damage profiles
