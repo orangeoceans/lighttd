@@ -213,6 +213,14 @@ offset_bottom = 61.0
 theme_override_font_sizes/normal_font_size = 48
 text = "WAVE 1"
 
+[node name="LivesCounter" type="RichTextLabel" parent="HUD/BottomBar"]
+offset_left = 2.0
+offset_top = -33.0
+offset_right = 194.0
+offset_bottom = 2.0
+theme_override_font_sizes/normal_font_size = 24
+text = "Lives: X"
+
 [node name="ChooseThree" type="Control" parent="HUD"]
 anchors_preset = 0
 offset_left = 314.0

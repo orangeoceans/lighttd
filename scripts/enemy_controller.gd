@@ -4,6 +4,7 @@ class_name EnemyController
 signal wave_started(wave_number: int)
 signal wave_completed
 signal all_enemies_cleared
+signal enemy_reached_end
 
 @export var enemies_per_wave: int = 10
 @export var spawn_cooldown: float = 1
@@ -156,7 +157,8 @@ func _on_enemy_left_board(enemy):
 	if enemy in active_enemies:
 		active_enemies.erase(enemy)
 	
-	# TODO: Apply damage to player, reduce lives, etc.
+	# Emit signal to notify player controller to lose a life
+	enemy_reached_end.emit()
 	
 	# Check if all enemies are cleared
 	if active_enemies.size() <= 0 and enemies_to_spawn <= 0 and wave_active:

@@ -52,6 +52,13 @@ var tower_options_bg: ColorRect = null
 var tower_controls_tween: Tween = null
 var tower_options_tween: Tween = null
 
+# Audio system
+var audio_player: AudioStreamPlayer = null
+var title_music: AudioStream = null
+var calm_music: AudioStream = null
+var energetic_music: AudioStream = null
+var current_audio_state: String = "none"  # "title", "calm", "energetic", "none"
+
 # Upgrade system
 var upgrade_panels: Array[ColorRect] = []
 var upgrade_name_labels: Array[RichTextLabel] = []
@@ -77,6 +84,11 @@ var ccollector_tower_unlocked: bool = false
 var collector_tower_placed: bool = false
 var any_tower_placed: bool = false  # Track if any towers have been placed
 
+# Lives system
+var current_lives: int = 10  # Starting lives
+var lives_counter: Control = null
+var is_game_over: bool = false  # Track if game is over
+
 func _ready():
 	# Add to group for HUD to find
 	add_to_group("player_controller")
@@ -85,6 +97,13 @@ func _ready():
 	var enemy_controller = get_tree().get_first_node_in_group("enemy_controller")
 	if enemy_controller:
 		enemy_controller.all_enemies_cleared.connect(_on_wave_completed)
+		enemy_controller.wave_started.connect(_on_wave_started)
+		enemy_controller.enemy_reached_end.connect(_on_enemy_reached_end)
+		print("Connected to enemy controller for audio system and lives system")
+	else:
+		print("WARNING: Enemy controller not found, will try to connect later")
+		# Try to connect later when the enemy controller is ready
+		call_deferred("connect_to_enemy_controller")
 	
 	# Find the tower option buttons from HUD
 	if hud:
@@ -145,6 +164,12 @@ func _ready():
 		
 		# Setup tutorial interface
 		setup_tutorial_interface()
+		
+		# Setup audio system
+		setup_audio_system()
+		
+		# Setup lives counter
+		setup_lives_counter()
 		
 		# Hide color ratio container initially and update UI based on initial progression state
 		if color_ratio_box:
@@ -764,14 +789,22 @@ func get_available_upgrades() -> Array:
 			"value": "convex_lens"
 		})
 	
-	# Ccollector tower upgrade
-	if not ccollector_tower_unlocked:
+	# Collector tower upgrade (only show if unlocked but not placed)
+	if ccollector_tower_unlocked and not collector_tower_placed:
 		upgrades.append({
 			"name": "Collector Tower",
-			"description": "Enables color mixing and balance multipliers",
+			"description": "Place the special collector tower to gather light energy",
 			"type": "ccollector_tower",
-			"value": true
+			"value": "ccollector_tower"
 		})
+	
+	# Lives upgrade
+	upgrades.append({
+		"name": "Extra Lives",
+		"description": "Gain +3 lives to survive more enemy breaches",
+		"type": "lives",
+		"value": 3
+	})
 	
 	return upgrades
 
@@ -803,6 +836,10 @@ func apply_upgrade(panel_index: int):
 			print("Unlocked ccollector tower")
 			# Show collector tutorial when unlocked
 			show_collector_tutorial()
+		"lives":
+			current_lives += upgrade.value
+			print("Gained ", upgrade.value, " lives! Current lives: ", current_lives)
+			update_lives_display()
 	
 	# Update UI to reflect new unlocks
 	update_progression_ui()
@@ -829,15 +866,40 @@ func refresh_beams():
 	if level and level.board:
 		level.board.refresh_beams_for_unlocked_colors()
 
+func connect_to_enemy_controller():
+	var enemy_controller = get_tree().get_first_node_in_group("enemy_controller")
+	if enemy_controller:
+		enemy_controller.all_enemies_cleared.connect(_on_wave_completed)
+		enemy_controller.wave_started.connect(_on_wave_started)
+		enemy_controller.enemy_reached_end.connect(_on_enemy_reached_end)
+		print("Successfully connected to enemy controller (deferred)")
+	else:
+		print("Still no enemy controller found")
+
+func _on_wave_started(wave_number: int):
+	print("Wave ", wave_number, " started! Switching to energetic music...")
+	# Switch to energetic music during waves
+	play_energetic_music()
+
 func _on_wave_completed():
-	print("Wave completed! Showing upgrade choices...")
+	print("Wave completed! Switching to calm music and showing upgrade choices...")
+	# Switch to calm music between waves
+	play_calm_music()
 	# Show upgrade choices after each wave
 	show_upgrade_choices()
+
+func _on_enemy_reached_end():
+	print("Enemy reached the end! Losing a life...")
+	lose_life()
 
 # Tutorial system functions
 func _on_tutorial_ok_pressed():
 	if tutorial_container:
 		tutorial_container.visible = false
+		
+		# Check if this was a game over screen
+		if is_game_over:
+			return_to_main_menu()
 
 func show_tutorial(title: String, description: String):
 	if not tutorial_container or not tutorial_title_label or not tutorial_desc_label:
@@ -933,3 +995,161 @@ func stop_tower_options_pulsate():
 	
 	# Reset to full opacity
 	tower_options_bg.modulate.a = 1.0
+
+# Lives system functions
+func setup_lives_counter():
+	if not hud:
+		print("ERROR: HUD not found for lives counter setup")
+		return
+	
+	lives_counter = hud.get_node_or_null("BottomBar/LivesCounter")
+	if not lives_counter:
+		print("WARNING: LivesCounter not found in HUD/BottomBar")
+		return
+	
+	# Initialize the lives display
+	update_lives_display()
+	print("Lives counter initialized with ", current_lives, " lives")
+
+func update_lives_display():
+	if not lives_counter:
+		return
+	
+	# Try to find the label in various ways
+	var lives_label = null
+	
+	# First, try direct children with common label names
+	var possible_names = ["Label", "LivesLabel", "Text", "LivesText", "Count", "LivesCount"]
+	for label_name in possible_names:
+		lives_label = lives_counter.get_node_or_null(label_name)
+		if lives_label:
+			break
+	
+	# If not found, try to find any Label node recursively
+	if not lives_label:
+		lives_label = find_label_recursive(lives_counter)
+	
+	# If we found a label, update it
+	if lives_label and lives_label.has_method("set_text"):
+		lives_label.text = "Lives: " + str(current_lives)
+		print("Updated lives display to: Lives: ", current_lives)
+	else:
+		print("WARNING: Could not find or update lives label in LivesCounter")
+		print("LivesCounter children: ", lives_counter.get_children())
+
+func find_label_recursive(node: Node) -> Node:
+	# Check if this node is a label
+	if node.get_class() == "Label" or node.get_class() == "RichTextLabel":
+		return node
+	
+	# Check children recursively
+	for child in node.get_children():
+		var result = find_label_recursive(child)
+		if result:
+			return result
+	
+	return null
+
+func lose_life():
+	current_lives -= 1
+	print("Lost a life! Remaining lives: ", current_lives)
+	update_lives_display()
+	
+	if current_lives <= 0:
+		game_over()
+
+func game_over():
+	print("GAME OVER! No lives remaining!")
+	is_game_over = true
+	
+	# Use tutorial window as game over screen
+	show_tutorial(
+		"GAME OVER",
+		"You have run out of lives! All enemies have breached your defenses. Click OK to return to the main menu and try again."
+	)
+
+func return_to_main_menu():
+	print("Returning to main menu...")
+	# Change scene to main menu
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
+
+# Audio system functions
+func setup_audio_system():
+	# Create audio player node
+	audio_player = AudioStreamPlayer.new()
+	add_child(audio_player)
+	audio_player.volume_db = 0.0  # Set to full volume for testing
+	audio_player.autoplay = false
+	print("Audio player created with volume: ", audio_player.volume_db)
+	
+	# Load audio files
+	title_music = load("res://assets/sounds/collector.wav")
+	calm_music = load("res://assets/sounds/2025-10-06 calm loop.wav")
+	energetic_music = load("res://assets/sounds/2025-10-06 energetic loop.wav")
+	
+	if not title_music:
+		print("WARNING: Could not load collector.wav")
+	else:
+		print("Successfully loaded title_music: ", title_music.get_class())
+	if not calm_music:
+		print("WARNING: Could not load calm loop.wav")
+	else:
+		print("Successfully loaded calm_music: ", calm_music.get_class())
+	if not energetic_music:
+		print("WARNING: Could not load energetic loop.wav")
+	else:
+		print("Successfully loaded energetic_music: ", energetic_music.get_class())
+	
+	# Start with calm music at game start (before first wave)
+	call_deferred("play_calm_music")
+
+func play_title_music():
+	print("play_title_music called, current state: ", current_audio_state)
+	if current_audio_state == "title":
+		print("Already playing title music, skipping")
+		return  # Already playing title music
+	
+	if title_music and audio_player:
+		audio_player.stream = title_music
+		audio_player.volume_db = 0.0  # Normal volume for title music
+		audio_player.play()
+		current_audio_state = "title"
+		print("Successfully started playing title music at volume: ", audio_player.volume_db)
+	else:
+		print("ERROR: Cannot play title music - title_music: ", title_music != null, " audio_player: ", audio_player != null)
+
+func play_calm_music():
+	print("play_calm_music called, current state: ", current_audio_state)
+	if current_audio_state == "calm":
+		print("Already playing calm music, skipping")
+		return  # Already playing calm music
+	
+	if calm_music and audio_player:
+		audio_player.stream = calm_music
+		audio_player.volume_db = 10.0  # Boost volume significantly for quiet calm music
+		audio_player.play()
+		current_audio_state = "calm"
+		print("Successfully started playing calm music at volume: ", audio_player.volume_db)
+	else:
+		print("ERROR: Cannot play calm music - calm_music: ", calm_music != null, " audio_player: ", audio_player != null)
+
+func play_energetic_music():
+	print("play_energetic_music called, current state: ", current_audio_state)
+	if current_audio_state == "energetic":
+		print("Already playing energetic music, skipping")
+		return  # Already playing energetic music
+	
+	if energetic_music and audio_player:
+		audio_player.stream = energetic_music
+		audio_player.volume_db = 0.0  # Normal volume for energetic music
+		audio_player.play()
+		current_audio_state = "energetic"
+		print("Successfully started playing energetic music at volume: ", audio_player.volume_db)
+	else:
+		print("ERROR: Cannot play energetic music - energetic_music: ", energetic_music != null, " audio_player: ", audio_player != null)
+
+func stop_music():
+	if audio_player:
+		audio_player.stop()
+		current_audio_state = "none"
+		print("Music stopped")
