@@ -4,11 +4,15 @@ class_name Beam
 var board : Board = null
 var mesh_instance : MeshInstance3D = null
 var debug_points_parent : Node3D = null
+var key_indicator : Node3D = null  # Key display at beam origin
 
 @onready var current_beam_segments: Array = []  # Store beam segments for damage calculation [{p1, p2, width1, width2}]
 @onready var current_scatter_segments: Array = []  # Store scatter beam segments for rendering
 @onready var is_active : bool = false
 @onready var time_elapsed: float = 0.0  # For pulsating effect
+
+# Key scene reference
+var key_scene: PackedScene = preload("res://scenes/key.tscn")
 
 @export var show_debug_points: bool = true  # Toggle debug point visualization
 
@@ -49,7 +53,6 @@ func _process(delta: float) -> void:
 		time_elapsed += delta
 
 func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vector3, direction: Vector2, key: int):
-	print("Initializing beam with color enum: ", beam_color_enum)
 	self.board = board
 	self.beam_color_enum = beam_color_enum
 	self.key = key
@@ -79,8 +82,50 @@ func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vect
 	debug_points_parent.name = "DebugPoints"
 	add_child(debug_points_parent)
 
-	beam_start_position = position
+	# Move beam start position back from the original position
+	var back_offset = Vector3(-direction.x, 0, -direction.y) * 1.5
+	beam_start_position = position + back_offset
 	beam_start_direction = direction
+	
+	# Create key indicator at beam origin
+	create_key_indicator()
+
+func create_key_indicator():
+	# Try to load the scene if not already loaded
+	if not key_scene:
+		key_scene = load("res://scenes/key.tscn")
+		if not key_scene:
+			return
+	
+	# Instantiate the key indicator
+	key_indicator = key_scene.instantiate()
+	if not key_indicator:
+		return
+		
+	add_child(key_indicator)
+	
+	# Position key indicator at beam origin (slightly above for visibility)
+	# Use position instead of global_position to avoid tree issues
+	key_indicator.position = beam_start_position + Vector3(0, 1, 0)
+	
+	# Find the SubViewport and KeyIcon button to set the text
+	var subviewport = key_indicator.get_node_or_null("SubViewport")
+	if subviewport:
+		var key_icon_button = subviewport.get_node_or_null("KeyIcon")
+		if key_icon_button and key_icon_button is Button:
+			# Convert key code to character
+			var key_char = char(key)
+			key_icon_button.text = key_char
+	else:
+		# Try alternative node paths
+		for child in key_indicator.get_children():
+			if child is SubViewport:
+				subviewport = child
+				var key_icon_button = subviewport.get_node_or_null("KeyIcon")
+				if key_icon_button and key_icon_button is Button:
+					var key_char = char(key)
+					key_icon_button.text = key_char
+				break
 
 func cast_ray(origin: Vector2, direction: Vector2, max_distance: float) -> Dictionary:
 	var closest_hit = {}

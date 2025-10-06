@@ -1,6 +1,6 @@
 [gd_scene load_steps=14 format=3 uid="uid://ch6mbgp7tel2n"]
 
-[ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_7usu8"]
+[ext_resource type="Script" uid="uid://b11f0pn3qx8pi" path="res://scripts/enemies/Martin.gd" id="1_fd3j1"]
 [ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_7cxtf"]
 [ext_resource type="Texture2D" uid="uid://bt5i4bivw68dq" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 1.png" id="3_qqip5"]
 [ext_resource type="Texture2D" uid="uid://x0ex3ljxsfa5" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 2.png" id="4_dhjrk"]
@@ -52,7 +52,7 @@ animations = [{
 
 [node name="enemyBody" type="CharacterBody3D" parent="."]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
-script = ExtResource("1_7usu8")
+script = ExtResource("1_fd3j1")
 health_bar_scene = ExtResource("2_7cxtf")
 
 [node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]

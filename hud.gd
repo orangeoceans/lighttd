@@ -4,6 +4,7 @@ extends Control
 @onready var rotation_bar = $TowerControls/MirrorControls/RotationBar
 @onready var start_wave_button = $BottomBar/StartWave
 @onready var reset_camera_button = $BottomBar/ResetCamera
+@onready var wave_counter = $BottomBar/WaveCounter
 
 var current_tower: TowerLine = null
 var enemy_controller: EnemyController = null
@@ -30,6 +31,9 @@ func _ready():
 	# Connect ResetCamera button
 	if reset_camera_button:
 		reset_camera_button.pressed.connect(_on_reset_camera_pressed)
+	
+	# Initialize wave counter
+	update_wave_counter(1)
 	
 	# Find controllers
 	call_deferred("_find_controllers")
@@ -60,10 +64,13 @@ func _on_start_wave_pressed():
 	if enemy_controller and enemy_controller.is_wave_ready():
 		enemy_controller.start_wave()
 
-func _on_wave_started():
+func _on_wave_started(wave_number: int):
 	# Disable button when wave starts
 	if start_wave_button:
 		start_wave_button.disabled = true
+	
+	# Update wave counter display
+	update_wave_counter(wave_number)
 
 func _on_all_enemies_cleared():
 	# Enable button when all enemies are cleared
@@ -73,6 +80,10 @@ func _on_all_enemies_cleared():
 func _on_reset_camera_pressed():
 	if player_controller and player_controller.has_method("reset_camera"):
 		player_controller.reset_camera()
+
+func update_wave_counter(wave_number: int):
+	if wave_counter:
+		wave_counter.text = "WAVE " + str(wave_number)
 
 func _on_tower_selected(tower: TowerLine):
 	current_tower = tower

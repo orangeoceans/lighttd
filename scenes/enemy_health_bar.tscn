@@ -9,13 +9,14 @@ viewport_path = NodePath("SubViewport")
 script = ExtResource("1_la8mi")
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
+pixel_size = 0.02
 billboard = 1
 texture = SubResource("ViewportTexture_la8mi")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(200, 80)
+size = Vector2i(400, 80)
 render_target_update_mode = 4
 
 [node name="ProgressBar" type="ProgressBar" parent="SubViewport"]
@@ -34,9 +35,11 @@ grow_vertical = 2
 show_percentage = false
 
 [node name="StatusEffects" type="RichTextLabel" parent="SubViewport"]
-offset_left = 8.0
+offset_left = -10.0
 offset_top = 5.0
-offset_right = 188.0
+offset_right = 390.0
 offset_bottom = 55.0
+theme_override_font_sizes/normal_font_size = 40
 text = "test"
 scroll_active = false
+horizontal_alignment = 1

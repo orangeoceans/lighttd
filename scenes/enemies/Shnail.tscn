@@ -1,6 +1,6 @@
 [gd_scene load_steps=18 format=3 uid="uid://dt6miunmo42ne"]
 
-[ext_resource type="Script" uid="uid://b71pydocrnqx" path="res://scripts/basicEnemy.gd" id="1_g06sk"]
+[ext_resource type="Script" uid="uid://bnj05hg4ethm3" path="res://scripts/enemies/Shnail.gd" id="1_arj2y"]
 [ext_resource type="PackedScene" uid="uid://dlqgwfg6uk0f2" path="res://scenes/enemy_health_bar.tscn" id="2_arj2y"]
 [ext_resource type="Texture2D" uid="uid://bt5i4bivw68dq" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 1.png" id="3_4k87i"]
 [ext_resource type="Texture2D" uid="uid://x0ex3ljxsfa5" path="res://scenes/enemies/Martin Leaf Maple Front/Marvin 2.png" id="4_trk4u"]
@@ -73,7 +73,7 @@ animations = [{
 
 [node name="enemyBody" type="CharacterBody3D" parent="."]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
-script = ExtResource("1_g06sk")
+script = ExtResource("1_arj2y")
 health_bar_scene = ExtResource("2_arj2y")
 
 [node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]

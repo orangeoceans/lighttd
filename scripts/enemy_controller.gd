@@ -1,18 +1,31 @@
 extends Node3D
 class_name EnemyController
 
-signal wave_started
+signal wave_started(wave_number: int)
 signal wave_completed
 signal all_enemies_cleared
 
 @export var enemies_per_wave: int = 10
-@export var spawn_cooldown: float = 0.5
+@export var spawn_cooldown: float = 1
+
+var current_wave: int = 1
 
 @export var hud: Control
 @export var level: Level
 
-@onready var basicEnemy: PackedScene = preload("res://scenes/enemies/basicEnemy.tscn")
+# Enemy scenes
+@onready var enemy_scenes: Dictionary = {
+	"Martin": preload("res://scenes/enemies/Martin.tscn"),
+	"Acorn": preload("res://scenes/enemies/Acorn.tscn"), 
+	"Spider": preload("res://scenes/enemies/Spider.tscn"),
+	"Pinecone": preload("res://scenes/enemies/Pinecone.tscn"),
+	"Shnail": preload("res://scenes/enemies/Shnail.tscn")
+}
+
 @onready var spawn_timer: Timer = Timer.new()
+
+var current_wave_enemy_types: Array[String] = []  # Multiple enemy types per wave
+var health_scaling_per_wave: float = 1.2  # 20% more health per wave
 
 var scene_path: Path3D = null
 var enemies_to_spawn: int = 0
@@ -47,10 +60,40 @@ func start_wave():
 	if wave_active or active_enemies.size() > 0:
 		return  # Can't start wave if one is active or enemies still alive
 	
+	# Select multiple enemy types based on wave number
+	current_wave_enemy_types = select_enemy_types_for_wave()
+	
 	wave_active = true
 	enemies_to_spawn = enemies_per_wave
 	active_enemies.clear()
-	wave_started.emit()
+	
+	wave_started.emit(current_wave)
+
+func select_enemy_types_for_wave() -> Array[String]:
+	var enemy_types = enemy_scenes.keys()
+	var selected_types: Array[String] = []
+	
+	# Calculate number of different enemy types based on wave
+	# Wave 1: 1 type, Wave 2-3: 1-2 types, Wave 4-6: 1-3 types, Wave 7+: 1-4 types
+	var max_types: int
+	if current_wave <= 1:
+		max_types = 1
+	elif current_wave <= 3:
+		max_types = 2
+	elif current_wave <= 6:
+		max_types = 3
+	else:
+		max_types = 4
+	
+	# Randomly select 1 to max_types different enemy types
+	var num_types = randi_range(1, max_types)
+	
+	# Shuffle enemy types and pick the first num_types
+	enemy_types.shuffle()
+	for i in range(min(num_types, enemy_types.size())):
+		selected_types.append(enemy_types[i])
+	
+	return selected_types
 
 func spawn_enemies():
 	if enemies_to_spawn > 0 and can_spawn:
@@ -58,8 +101,15 @@ func spawn_enemies():
 			push_error("EnemyController: scene_path is invalid")
 			return
 		
+		if current_wave_enemy_types.is_empty():
+			push_error("EnemyController: No enemy types selected for wave")
+			return
+		
+		# Randomly select an enemy type from this wave's types
+		var selected_enemy_type = current_wave_enemy_types[randi() % current_wave_enemy_types.size()]
+		
 		spawn_timer.start()
-		var enemy_scene = basicEnemy.instantiate()
+		var enemy_scene = enemy_scenes[selected_enemy_type].instantiate()
 		scene_path.add_child(enemy_scene)
 		
 		# The actual enemy with the script is a child of the PathFollow3D
@@ -68,6 +118,10 @@ func spawn_enemies():
 			enemy = enemy_scene.get_child(0)  # Get first child (CharacterBody3D with script)
 		else:
 			enemy = enemy_scene  # Fallback to root node
+		
+		# Apply health scaling based on wave number
+		if enemy and enemy.has_method("scale_health_for_wave"):
+			enemy.scale_health_for_wave(current_wave, health_scaling_per_wave)
 		
 		# Connect to enemy signals to track active count
 		if enemy.has_signal("enemy_died"):
@@ -94,6 +148,7 @@ func _on_enemy_died(enemy):
 	# Check if all enemies are cleared
 	if active_enemies.size() <= 0 and enemies_to_spawn <= 0 and wave_active:
 		wave_active = false
+		current_wave += 1  # Increment wave number for next wave
 		all_enemies_cleared.emit()
 
 func _on_enemy_left_board(enemy):
@@ -106,6 +161,7 @@ func _on_enemy_left_board(enemy):
 	# Check if all enemies are cleared
 	if active_enemies.size() <= 0 and enemies_to_spawn <= 0 and wave_active:
 		wave_active = false
+		current_wave += 1  # Increment wave number for next wave
 		all_enemies_cleared.emit()
 
 func is_wave_ready() -> bool:

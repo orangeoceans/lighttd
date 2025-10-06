@@ -37,17 +37,46 @@ var camera_defaults_stored: bool = false
 var active_beams: Array[Beam] = []  # Currently active beams
 
 # UI References
-var tower_option_dropdown: OptionButton = null
+var tower_option_control: Control = null
+var mirror_option_button: Button = null
+var concave_option_button: Button = null
+var convex_option_button: Button = null
+var move_button: Button = null
+var tower_name_label: RichTextLabel = null
 
 func _ready():
 	# Add to group for HUD to find
 	add_to_group("player_controller")
 	
-	# Find the tower type dropdown from HUD
+	# Find the tower option buttons from HUD
 	if hud:
-		tower_option_dropdown = hud.get_node_or_null("TowerBar/TowerOption")
-		if not tower_option_dropdown:
-			print("WARNING: TowerOption dropdown not found in HUD")
+		tower_option_control = hud.get_node_or_null("TopBar/TowerOption")
+		if tower_option_control:
+			mirror_option_button = tower_option_control.get_node_or_null("MirrorOption")
+			concave_option_button = tower_option_control.get_node_or_null("ConcaveOption")
+			convex_option_button = tower_option_control.get_node_or_null("ConvexOption")
+			
+			# Connect button signals
+			if mirror_option_button:
+				mirror_option_button.toggled.connect(_on_mirror_option_toggled)
+			if concave_option_button:
+				concave_option_button.toggled.connect(_on_concave_option_toggled)
+			if convex_option_button:
+				convex_option_button.toggled.connect(_on_convex_option_toggled)
+		else:
+			print("WARNING: TowerOption control not found in HUD")
+		
+		# Find and connect MoveButton
+		move_button = hud.get_node_or_null("TowerControls/MoveButton")
+		if move_button:
+			move_button.pressed.connect(_on_move_button_pressed)
+		else:
+			print("WARNING: MoveButton not found in HUD")
+		
+		# Find TowerName label
+		tower_name_label = hud.get_node_or_null("TowerControls/TowerName")
+		if not tower_name_label:
+			print("WARNING: TowerName label not found in HUD")
 	else:
 		print("WARNING: HUD reference not set in PlayerController")
 
@@ -55,25 +84,19 @@ func _process(_delta):
 	# Store default camera settings on first frame
 	if not camera_defaults_stored and camera_rig:
 		store_default_camera_settings()
-	
 	handle_beam_activation()
 	handle_camera_controls()
 	handle_player_controls()
 
 func get_selected_tower_type() -> String:
-	if not tower_option_dropdown:
+	# Check which button is pressed
+	if mirror_option_button and mirror_option_button.button_pressed:
 		return "mirror"
-	
-	var selected_idx = tower_option_dropdown.selected
-	match selected_idx:
-		0:
-			return "mirror"
-		1:
-			return "concave_lens"
-		2:
-			return "convex_lens"
-		_:
-			return "mirror"
+	elif concave_option_button and concave_option_button.button_pressed:
+		return "concave_lens"
+	elif convex_option_button and convex_option_button.button_pressed:
+		return "convex_lens"
+	return "mirror"  # Default fallback
 
 func handle_beam_activation() -> void:
 	if not level:
@@ -322,11 +345,14 @@ func select_tower(tower: TowerLine):
 	if selected_tower and is_instance_valid(selected_tower):
 		selected_tower.hide_indicators()
 	
-	# Select new tower
 	selected_tower = tower
 	if selected_tower:
 		selected_tower.show_indicators()
 		print("SELECTED TOWER: ", selected_tower.tower_type)
+		
+		# Update tower name display
+		update_tower_name_display()
+		
 		# Emit signal for UI to respond
 		Globals.tower_selected.emit(selected_tower)
 
@@ -335,6 +361,10 @@ func deselect_tower():
 		selected_tower.hide_indicators()
 		print("DESELECTED TOWER")
 	selected_tower = null
+	
+	# Update tower name display (clear it)
+	update_tower_name_display()
+	
 	# Emit signal for UI to respond
 	Globals.tower_deselected.emit()
 
@@ -388,3 +418,47 @@ func stop_dragging(empty_tile: CollisionObject3D):
 	dragging_tower = null
 	original_parent = null
 	drag_offset = Vector3.ZERO
+
+# Tower option button signal handlers
+func _on_mirror_option_toggled(pressed: bool):
+	if pressed:
+		# Unpress other buttons
+		if concave_option_button:
+			concave_option_button.button_pressed = false
+		if convex_option_button:
+			convex_option_button.button_pressed = false
+
+func _on_concave_option_toggled(pressed: bool):
+	if pressed:
+		# Unpress other buttons
+		if mirror_option_button:
+			mirror_option_button.button_pressed = false
+		if convex_option_button:
+			convex_option_button.button_pressed = false
+
+func _on_convex_option_toggled(pressed: bool):
+	if pressed:
+		# Unpress other buttons
+		if mirror_option_button:
+			mirror_option_button.button_pressed = false
+		if concave_option_button:
+			concave_option_button.button_pressed = false
+
+func _on_move_button_pressed():
+	# Activate move mode (same as pressing M key)
+	if dragging_tower:
+		cancel_dragging()
+	elif selected_tower and is_instance_valid(selected_tower):
+		start_dragging(selected_tower, selected_tower.global_position)
+
+func update_tower_name_display():
+	if not tower_name_label:
+		return
+	
+	if selected_tower and is_instance_valid(selected_tower):
+		# Display the tower type name (capitalize first letter)
+		var tower_name = selected_tower.tower_type.capitalize()
+		tower_name_label.text = tower_name
+	else:
+		# Clear the display when no tower is selected
+		tower_name_label.text = ""

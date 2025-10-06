@@ -41,7 +41,6 @@ func _ready():
 		status_effects_label.bbcode_enabled = true
 		status_effects_label.fit_content = true
 		status_effects_label.scroll_active = false
-		status_effects_label.add_theme_font_size_override("normal_font_size", 32)
 		status_effects_label.text = ""  # Start empty
 		print("StatusEffects label configured")
 	else:
@@ -54,7 +53,6 @@ func _ready():
 	sprite_3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite_3d.no_depth_test = true  # Draw on top, always visible
 	sprite_3d.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	sprite_3d.pixel_size = 0.015
 
 	print("EnemyHealthBar setup complete - pixel_size: ", sprite_3d.pixel_size)
 

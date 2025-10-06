@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://bk0vdfklpxm2m"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_ndie3"]
+viewport_path = NodePath("SubViewport")
+
+[node name="Key" type="Node3D"]
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+pixel_size = 0.02
+billboard = 1
+texture = SubResource("ViewportTexture_ndie3")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(50, 50)
+render_target_update_mode = 4
+
+[node name="KeyIcon" type="Button" parent="SubViewport"]
+offset_right = 50.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 28
+text = "A"

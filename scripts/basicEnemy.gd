@@ -100,6 +100,16 @@ func die() -> void:
 	else:
 		queue_free()
 
+func scale_health_for_wave(wave_number: int, scaling_factor: float) -> void:
+	# Scale health based on wave number
+	var health_multiplier = pow(scaling_factor, wave_number - 1)
+	health *= health_multiplier
+	max_health *= health_multiplier
+	
+	# Update health bar with new values
+	if health_bar:
+		health_bar.update_health(health, max_health)
+
 # Accumulate status effect (fractional values)
 func accumulate_status(effect: StatusEffect, amount: float) -> void:
 	if effect in status_effects:
