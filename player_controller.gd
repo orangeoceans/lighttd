@@ -45,7 +45,12 @@ var concave_option_button: Button = null
 var convex_option_button: Button = null
 var collector_option_button: Button = null
 var move_button: Button = null
+var delete_button: Button = null
 var tower_name_label: RichTextLabel = null
+var tower_controls_bg: ColorRect = null
+var tower_options_bg: ColorRect = null
+var tower_controls_tween: Tween = null
+var tower_options_tween: Tween = null
 
 # Upgrade system
 var upgrade_panels: Array[ColorRect] = []
@@ -54,11 +59,23 @@ var upgrade_desc_labels: Array[RichTextLabel] = []
 var choose_buttons: Array[Button] = []
 var current_upgrade_choices: Array = []  # Store the current displayed upgrades
 
+# Tutorial system
+var tutorial_container: Control = null
+var tutorial_title_label: RichTextLabel = null
+var tutorial_desc_label: RichTextLabel = null
+var tutorial_ok_button: Button = null
+var tutorial_shown: Dictionary = {
+	"game_start": false,
+	"first_tower": false,
+	"collector_unlock": false
+}
+
 # Player progression
 var unlocked_beam_colors: Array[String] = ["red"]  # Start with red only
 var unlocked_tower_types: Array[String] = ["mirror"]  # Start with mirrors only
 var ccollector_tower_unlocked: bool = false
 var collector_tower_placed: bool = false
+var any_tower_placed: bool = false  # Track if any towers have been placed
 
 func _ready():
 	# Add to group for HUD to find
@@ -78,6 +95,11 @@ func _ready():
 			convex_option_button = tower_option_control.get_node_or_null("ConvexOption")
 			collector_option_button = tower_option_control.get_node_or_null("CollectorOption")
 			
+			# Find TowerOptionsBG
+			tower_options_bg = tower_option_control.get_node_or_null("TowerOptionsBG")
+			if not tower_options_bg:
+				print("WARNING: TowerOptionsBG not found in TowerOption")
+			
 			# Connect button signals
 			if mirror_option_button:
 				mirror_option_button.toggled.connect(_on_mirror_option_toggled)
@@ -94,22 +116,47 @@ func _ready():
 		move_button = hud.get_node_or_null("TowerControls/MoveButton")
 		if move_button:
 			move_button.pressed.connect(_on_move_button_pressed)
+			move_button.visible = false  # Hide initially since no tower is selected
 		else:
 			print("WARNING: MoveButton not found in HUD")
+		
+		# Find and connect DeleteButton
+		delete_button = hud.get_node_or_null("TowerControls/DeleteButton")
+		if delete_button:
+			delete_button.pressed.connect(_on_delete_button_pressed)
+			delete_button.visible = false  # Hide initially since no tower is selected
+		else:
+			print("WARNING: DeleteButton not found in HUD")
 		
 		# Find TowerName label
 		tower_name_label = hud.get_node_or_null("TowerControls/TowerName")
 		if not tower_name_label:
 			print("WARNING: TowerName label not found in HUD")
 		
+		# Find TowerControlsBG
+		tower_controls_bg = hud.get_node_or_null("TowerControls/TowerControlsBG")
+		if tower_controls_bg:
+			tower_controls_bg.visible = false  # Hide initially since no tower is selected
+		else:
+			print("WARNING: TowerControlsBG not found in HUD")
+		
 		# Find ChooseThree upgrade interface
 		setup_choose_three_interface()
+		
+		# Setup tutorial interface
+		setup_tutorial_interface()
 		
 		# Hide color ratio container initially and update UI based on initial progression state
 		if color_ratio_box:
 			color_ratio_box.visible = false
 		
 		update_progression_ui()
+		
+		# Start tower options pulsating since no towers are placed initially
+		start_tower_options_pulsate()
+		
+		# Show game start tutorial after a brief delay
+		call_deferred("show_game_start_tutorial")
 	else:
 		print("WARNING: HUD reference not set in PlayerController")
 
@@ -332,8 +379,8 @@ func handle_player_controls():
 		return
 	
 	elif Input.is_action_just_pressed("interact"):
-		# Block tower placement when ChooseThree interface is visible
-		if choose_three_container and choose_three_container.visible:
+		# Block tower placement when ChooseThree interface or tutorial is visible
+		if (choose_three_container and choose_three_container.visible) or (tutorial_container and tutorial_container.visible):
 			return
 			
 		if dragging_tower:
@@ -353,6 +400,16 @@ func handle_player_controls():
 				var new_tower = Globals.create_tower(tower_type, mouse_over_obj)
 				select_tower(new_tower)
 				
+				# Handle first tower placement
+				if not any_tower_placed:
+					any_tower_placed = true
+					# Stop tower options pulsating and hide background since a tower has been placed
+					stop_tower_options_pulsate()
+					if tower_options_bg:
+						tower_options_bg.visible = false
+					# Show first tower tutorial
+					show_first_tower_tutorial()
+				
 				# Check if collector tower was placed
 				if tower_type == "collector":
 					collector_tower_placed = true
@@ -364,8 +421,8 @@ func handle_player_controls():
 		return
 
 	elif Input.is_action_just_pressed("interact_2"):
-		# Block tower interactions when ChooseThree interface is visible
-		if choose_three_container and choose_three_container.visible:
+		# Block tower interactions when ChooseThree interface or tutorial is visible
+		if (choose_three_container and choose_three_container.visible) or (tutorial_container and tutorial_container.visible):
 			return
 			
 		if dragging_tower:
@@ -373,8 +430,8 @@ func handle_player_controls():
 		return
 	
 	elif Input.is_action_just_pressed("toggle_move"):
-		# Block tower interactions when ChooseThree interface is visible
-		if choose_three_container and choose_three_container.visible:
+		# Block tower interactions when ChooseThree interface or tutorial is visible
+		if (choose_three_container and choose_three_container.visible) or (tutorial_container and tutorial_container.visible):
 			return
 			
 		if dragging_tower:
@@ -415,8 +472,17 @@ func select_tower(tower: TowerLine):
 		selected_tower.show_indicators()
 		print("SELECTED TOWER: ", selected_tower.tower_type)
 		
-		# Update tower name display
+		# Update tower name display and show move/delete buttons
 		update_tower_name_display()
+		if move_button:
+			move_button.visible = true
+		if delete_button:
+			delete_button.visible = true
+		
+		# Show and animate tower controls background
+		if tower_controls_bg:
+			tower_controls_bg.visible = true
+			start_tower_controls_pulsate()
 		
 		# Emit signal for UI to respond
 		Globals.tower_selected.emit(selected_tower)
@@ -427,11 +493,39 @@ func deselect_tower():
 		print("DESELECTED TOWER")
 	selected_tower = null
 	
-	# Update tower name display (clear it)
+	# Update tower name display (clear it) and hide move/delete buttons
 	update_tower_name_display()
+	if move_button:
+		move_button.visible = false
+	if delete_button:
+		delete_button.visible = false
+	
+	# Hide tower controls background and stop animation
+	if tower_controls_bg:
+		tower_controls_bg.visible = false
+		stop_tower_controls_pulsate()
 	
 	# Emit signal for UI to respond
 	Globals.tower_deselected.emit()
+
+func delete_selected_tower():
+	if not selected_tower or not is_instance_valid(selected_tower):
+		return
+	
+	print("DELETING TOWER: ", selected_tower.tower_type)
+	
+	# Check if it's a collector tower being deleted
+	if selected_tower.tower_type == "collector":
+		collector_tower_placed = false
+		print("Collector tower deleted! Re-enabling collector button.")
+		update_progression_ui()
+	
+	# Remove the tower from the scene
+	selected_tower.queue_free()
+	
+	# Clear selection and update UI
+	selected_tower = null
+	deselect_tower()
 
 func start_dragging(tower: TowerLine, _hit_position: Vector3):
 	dragging_tower = tower
@@ -529,7 +623,13 @@ func _on_move_button_pressed():
 	# Activate move mode (same as pressing M key)
 	if dragging_tower:
 		cancel_dragging()
+	elif selected_tower and is_instance_valid(selected_tower):
 		start_dragging(selected_tower, selected_tower.global_position)
+
+func _on_delete_button_pressed():
+	# Delete the currently selected tower
+	if selected_tower and is_instance_valid(selected_tower):
+		delete_selected_tower()
 
 func update_tower_name_display():
 	if not tower_name_label:
@@ -569,6 +669,32 @@ func setup_choose_three_interface():
 	
 	# Hide initially
 	choose_three_container.visible = false
+
+func setup_tutorial_interface():
+	if not hud:
+		print("ERROR: HUD not found for tutorial setup")
+		return
+	
+	tutorial_container = hud.get_node_or_null("Tutorial")
+	if not tutorial_container:
+		print("ERROR: Tutorial container not found in HUD")
+		return
+	
+	tutorial_title_label = tutorial_container.get_node_or_null("TutorialTitle")
+	tutorial_desc_label = tutorial_container.get_node_or_null("TutorialDesc")
+	tutorial_ok_button = tutorial_container.get_node_or_null("OKButton")
+	
+	if not tutorial_title_label:
+		print("ERROR: TutorialTitle not found")
+	if not tutorial_desc_label:
+		print("ERROR: TutorialDesc not found")
+	if not tutorial_ok_button:
+		print("ERROR: OKButton not found")
+	else:
+		tutorial_ok_button.pressed.connect(_on_tutorial_ok_pressed)
+	
+	# Hide initially
+	tutorial_container.visible = false
 
 func show_upgrade_choices():
 	print("show_upgrade_choices called")
@@ -675,6 +801,8 @@ func apply_upgrade(panel_index: int):
 		"ccollector_tower":
 			ccollector_tower_unlocked = true
 			print("Unlocked ccollector tower")
+			# Show collector tutorial when unlocked
+			show_collector_tutorial()
 	
 	# Update UI to reflect new unlocks
 	update_progression_ui()
@@ -705,3 +833,103 @@ func _on_wave_completed():
 	print("Wave completed! Showing upgrade choices...")
 	# Show upgrade choices after each wave
 	show_upgrade_choices()
+
+# Tutorial system functions
+func _on_tutorial_ok_pressed():
+	if tutorial_container:
+		tutorial_container.visible = false
+
+func show_tutorial(title: String, description: String):
+	if not tutorial_container or not tutorial_title_label or not tutorial_desc_label:
+		print("ERROR: Tutorial UI not properly initialized")
+		return
+	
+	tutorial_title_label.text = title
+	tutorial_desc_label.text = description
+	tutorial_container.visible = true
+
+func show_game_start_tutorial():
+	if tutorial_shown["game_start"]:
+		return
+	
+	tutorial_shown["game_start"] = true
+	show_tutorial(
+		"Welcome to Light Tower Defense!",
+		"Use mirrors to redirect the red laser beam and hit enemies. Click on empty tiles to place mirror towers. Press A key to activate the red beam and start defending!"
+	)
+
+func show_first_tower_tutorial():
+	if tutorial_shown["first_tower"]:
+		return
+	
+	tutorial_shown["first_tower"] = true
+	show_tutorial(
+		"Tower Controls",
+		"Great! You placed your first tower. You can select towers by clicking on them, then use the controls in the bottom right to rotate them. You can also press M key to move towers to different positions."
+	)
+
+func show_collector_tutorial():
+	if tutorial_shown["collector_unlock"]:
+		return
+	
+	tutorial_shown["collector_unlock"] = true
+	show_tutorial(
+		"Collector Tower Unlocked!",
+		"The Collector Tower absorbs light beams that hit it. Different beam colors create a color ratio that provides damage multipliers - the more balanced your colors, the higher your damage bonus! Place it strategically to collect multiple beam colors."
+	)
+
+# Tower controls background animation
+func start_tower_controls_pulsate():
+	if not tower_controls_bg:
+		return
+	
+	# Stop any existing animation
+	stop_tower_controls_pulsate()
+	
+	# Create a gentle pulsating tween animation
+	tower_controls_tween = create_tween()
+	tower_controls_tween.set_loops()  # Loop indefinitely
+	
+	# Animate modulate alpha from 1.0 to 0.0 and back
+	tower_controls_tween.tween_property(tower_controls_bg, "modulate:a", 0., 1.0)
+	tower_controls_tween.tween_property(tower_controls_bg, "modulate:a", 1., 1.0)
+
+func stop_tower_controls_pulsate():
+	if not tower_controls_bg:
+		return
+	
+	# Kill the specific tween if it exists
+	if tower_controls_tween and tower_controls_tween.is_valid():
+		tower_controls_tween.kill()
+		tower_controls_tween = null
+	
+	# Reset to full opacity
+	tower_controls_bg.modulate.a = 1.0
+
+# Tower options background animation
+func start_tower_options_pulsate():
+	if not tower_options_bg:
+		return
+	
+	# Stop any existing animation
+	stop_tower_options_pulsate()
+	
+	# Create a gentle pulsating tween animation
+	tower_options_tween = create_tween()
+	tower_options_tween.set_loops()  # Loop indefinitely
+	
+	# Animate modulate alpha from 1.0 to 0.0 and back
+	tower_options_tween.tween_property(tower_options_bg, "modulate:a", 0., 1.0)
+	tower_options_tween.tween_property(tower_options_bg, "modulate:a", 1., 1.0)
+
+func stop_tower_options_pulsate():
+	if not tower_options_bg:
+		return
+	
+	# Kill the specific tween if it exists
+	if tower_options_tween and tower_options_tween.is_valid():
+		tower_options_tween.kill()
+		tower_options_tween = null
+	
+	# Reset to full opacity
+	tower_options_bg.modulate.a = 1.0
