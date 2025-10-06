@@ -1,11 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://bxw4uu7t6ck8q"]
+[gd_scene load_steps=9 format=3 uid="uid://bxw4uu7t6ck8q"]
 
-[ext_resource type="Script" uid="uid://dnjfmsops52cg" path="res://scripts/enemy_controller.gd" id="1_p57ef"]
+[ext_resource type="Script" path="res://scripts/enemy_controller.gd" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://bawb02ci81455" path="res://scenes/test_level.tscn" id="1_yqjtg"]
 [ext_resource type="PackedScene" uid="uid://cr6nssg54kiew" path="res://scenes/cameraRig.tscn" id="2_lnu2h"]
 [ext_resource type="Script" uid="uid://b6savkug2uynt" path="res://hud.gd" id="3_lnu2h"]
 [ext_resource type="Script" uid="uid://xuspw0deuucj" path="res://player_controller.gd" id="4_lbhrr"]
 [ext_resource type="Script" uid="uid://dobt6ny1q5mbi" path="res://scripts/color_ratio_container.gd" id="5_iywne"]
+[ext_resource type="FontFile" uid="uid://c818j6bi3j5hg" path="res://assets/fonts/VIDEOPHREAK.ttf" id="7_u5sy4"]
+[ext_resource type="FontFile" uid="uid://doqn1241uves8" path="res://assets/fonts/FluxDemo.ttf" id="8_gee14"]
 
 [node name="Game" type="Node"]
 
@@ -28,6 +30,7 @@ color_ratio_box = NodePath("../HUD/TopBar/ColorRatioBox")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6085, 0, 5.64857)
 
 [node name="HUD" type="Control" parent="."]
+texture_filter = 1
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
@@ -62,6 +65,7 @@ offset_left = -186.0
 offset_top = 3.0
 offset_right = -126.0
 offset_bottom = 43.0
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 text = "x1"
 
 [node name="TowerOption" type="Control" parent="HUD/TopBar"]
@@ -69,57 +73,45 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="TowerOptionsBG" type="ColorRect" parent="HUD/TopBar/TowerOption"]
-offset_left = 737.0
-offset_top = -8.0
-offset_right = 863.0
-offset_bottom = 216.0
-color = Color(0.811765, 0.552941, 0.568627, 0.239216)
-
 [node name="MirrorOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 32.0
+offset_top = 1.0
 offset_right = 856.0
-offset_bottom = 68.0
+offset_bottom = 37.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 toggle_mode = true
 text = "Mirror"
 
 [node name="ConcaveOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 74.0
+offset_top = 43.0
 offset_right = 856.0
-offset_bottom = 110.0
+offset_bottom = 79.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 toggle_mode = true
 text = "Concave"
 
 [node name="ConvexOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 116.0
+offset_top = 85.0
 offset_right = 856.0
-offset_bottom = 152.0
+offset_bottom = 121.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 toggle_mode = true
 text = "Convex"
 
 [node name="CollectorOption" type="Button" parent="HUD/TopBar/TowerOption"]
 layout_mode = 0
 offset_left = 757.0
-offset_top = 158.0
+offset_top = 127.0
 offset_right = 856.0
-offset_bottom = 194.0
+offset_bottom = 163.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 toggle_mode = true
 text = "Collector"
-
-[node name="RichTextLabel" type="RichTextLabel" parent="HUD/TopBar/TowerOption"]
-layout_mode = 0
-offset_left = 755.0
-offset_right = 855.0
-offset_bottom = 35.0
-theme_override_font_sizes/normal_font_size = 18
-text = "Build"
-horizontal_alignment = 1
 
 [node name="TowerControls" type="Control" parent="HUD"]
 anchors_preset = 0
@@ -127,14 +119,6 @@ offset_left = 1071.0
 offset_top = 649.0
 offset_right = 1111.0
 offset_bottom = 689.0
-
-[node name="TowerControlsBG" type="ColorRect" parent="HUD/TowerControls"]
-layout_mode = 0
-offset_left = -147.0
-offset_top = -46.0
-offset_right = 209.0
-offset_bottom = 71.0
-color = Color(0.811765, 0.552941, 0.568627, 0.239216)
 
 [node name="MirrorControls" type="Control" parent="HUD/TowerControls"]
 anchors_preset = 0
@@ -155,6 +139,7 @@ offset_left = 1.0
 offset_top = -5.0
 offset_right = 222.0
 offset_bottom = 18.0
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 text = "Tower Rotation"
 
 [node name="MoveButton" type="Button" parent="HUD/TowerControls"]
@@ -163,22 +148,16 @@ offset_left = 90.0
 offset_top = 20.0
 offset_right = 200.0
 offset_bottom = 62.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 text = "Move (M)"
-
-[node name="DeleteButton" type="Button" parent="HUD/TowerControls"]
-layout_mode = 0
-offset_left = 90.0
-offset_top = -31.0
-offset_right = 200.0
-offset_bottom = 11.0
-text = "Delete"
 
 [node name="TowerName" type="RichTextLabel" parent="HUD/TowerControls"]
 layout_mode = 0
-offset_left = -120.0
-offset_top = -29.0
-offset_right = -13.0
-offset_bottom = -5.0
+offset_left = 91.0
+offset_top = -10.0
+offset_right = 198.0
+offset_bottom = 14.0
+horizontal_alignment = 2
 
 [node name="BottomBar" type="Control" parent="HUD"]
 anchors_preset = 0
@@ -193,6 +172,7 @@ offset_left = 199.0
 offset_top = 3.0
 offset_right = 296.0
 offset_bottom = 45.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 text = "Next Wave
 "
 
@@ -202,6 +182,7 @@ offset_left = 305.0
 offset_top = 3.0
 offset_right = 429.0
 offset_bottom = 45.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 text = "Reset Camera"
 
 [node name="WaveCounter" type="RichTextLabel" parent="HUD/BottomBar"]
@@ -210,6 +191,7 @@ offset_left = 2.0
 offset_top = -11.0
 offset_right = 226.0
 offset_bottom = 61.0
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 theme_override_font_sizes/normal_font_size = 48
 text = "WAVE 1"
 
@@ -247,6 +229,7 @@ offset_top = 11.0
 offset_right = 192.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("8_gee14")
 theme_override_font_sizes/normal_font_size = 20
 text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -259,6 +242,7 @@ offset_top = 100.0
 offset_right = 192.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -270,6 +254,7 @@ offset_left = 51.0
 offset_top = 334.0
 offset_right = 153.0
 offset_bottom = 376.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 theme_override_font_sizes/font_size = 24
 text = "Select"
 
@@ -285,6 +270,7 @@ offset_top = 11.0
 offset_right = 192.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("8_gee14")
 theme_override_font_sizes/normal_font_size = 20
 text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -297,6 +283,7 @@ offset_top = 100.0
 offset_right = 192.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -308,6 +295,7 @@ offset_left = 51.0
 offset_top = 334.0
 offset_right = 153.0
 offset_bottom = 376.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 theme_override_font_sizes/font_size = 24
 text = "Select"
 
@@ -323,6 +311,7 @@ offset_top = 11.0
 offset_right = 192.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("8_gee14")
 theme_override_font_sizes/normal_font_size = 20
 text = "asdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -335,6 +324,7 @@ offset_top = 100.0
 offset_right = 192.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
+theme_override_fonts/normal_font = ExtResource("7_u5sy4")
 theme_override_font_sizes/normal_font_size = 20
 text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
 horizontal_alignment = 1
@@ -346,51 +336,6 @@ offset_left = 51.0
 offset_top = 334.0
 offset_right = 153.0
 offset_bottom = 376.0
+theme_override_fonts/font = ExtResource("7_u5sy4")
 theme_override_font_sizes/font_size = 24
 text = "Select"
-
-[node name="Tutorial" type="Control" parent="HUD"]
-anchors_preset = 0
-offset_left = 430.0
-offset_top = 97.0
-offset_right = 470.0
-offset_bottom = 137.0
-
-[node name="Panel1" type="ColorRect" parent="HUD/Tutorial"]
-offset_right = 428.0
-offset_bottom = 430.0
-size_flags_horizontal = 3
-color = Color(0.901961, 0.882353, 0.992157, 1)
-
-[node name="TutorialTitle" type="RichTextLabel" parent="HUD/Tutorial"]
-layout_mode = 0
-offset_left = 13.0
-offset_top = 14.0
-offset_right = 413.0
-offset_bottom = 77.0
-theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
-theme_override_font_sizes/normal_font_size = 20
-text = "asdfasdfasdfasdf"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="TutorialDesc" type="RichTextLabel" parent="HUD/Tutorial"]
-layout_mode = 0
-offset_left = 13.0
-offset_top = 103.0
-offset_right = 413.0
-offset_bottom = 303.0
-theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
-theme_override_font_sizes/normal_font_size = 20
-text = "asedfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="OKButton" type="Button" parent="HUD/Tutorial"]
-layout_mode = 0
-offset_left = 163.0
-offset_top = 355.0
-offset_right = 265.0
-offset_bottom = 397.0
-theme_override_font_sizes/font_size = 24
-text = "OK"
