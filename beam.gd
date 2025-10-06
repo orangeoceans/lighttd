@@ -11,10 +11,10 @@ var debug_points_parent : Node3D = null
 
 @export var show_debug_points: bool = true  # Toggle debug point visualization
 
-@export var color : Color = Color.WHITE
-@export var base_dps: float = 5.0  # Base damage for beam at initial_beam_width
+@export var base_dps: float = 2.0  # Base damage for beam at initial_beam_width
 @export var key: int = 0
 
+var beam_color_enum: Globals.BeamColor  # Single source of truth for beam color
 var beam_start_position : Vector3 = Vector3.ZERO
 var beam_start_direction : Vector2 = Vector2.ONE
 var max_ray_length: float = 2000.0
@@ -41,17 +41,17 @@ func _process(delta: float) -> void:
 func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vector3, direction: Vector2, key: int):
 	print("Initializing beam with color enum: ", beam_color_enum)
 	self.board = board
-	self.color = Globals.get_beam_color(beam_color_enum)
+	self.beam_color_enum = beam_color_enum
 	self.key = key
 	
-	# Store the color enum for later use
-	set_meta("beam_color_enum", beam_color_enum)
+	# Get color from enum
+	var beam_color = Globals.get_beam_color(beam_color_enum)
 
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
+	material.albedo_color = beam_color
 	material.emission_enabled = true
-	material.emission = color
+	material.emission = beam_color
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.vertex_color_use_as_albedo = true
@@ -61,8 +61,8 @@ func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vect
 	add_child(mesh_instance)
 	mesh_instance.mesh = ImmediateMesh.new()
 	mesh_instance.material_override = material
-	mesh_instance.material_override.albedo_color = color
-	mesh_instance.material_override.emission = color
+	mesh_instance.material_override.albedo_color = beam_color
+	mesh_instance.material_override.emission = beam_color
 
 	# Create parent for debug points
 	debug_points_parent = Node3D.new()
@@ -163,7 +163,6 @@ func update_light_path() -> void:
 				# Collector: absorb the beam (stop tracing)
 				# Only increment count if this is the active beam
 				if is_active:
-					var beam_color_enum = get_meta("beam_color_enum")
 					Globals.increment_beam_count(beam_color_enum, 1.0)
 					# print("Collector absorbed ", beam_color_enum, " beam! Total counts: ", Globals.collector_beam_counts)
 				break
@@ -251,8 +250,10 @@ func update_beam_mesh(points: PackedVector3Array, widths: PackedFloat32Array, is
 			alpha2 = 0.25
 			brightness_mult = 0.5  # Dimmer
 		
-		var color1 = Color(color.r * brightness_mult, color.g * brightness_mult, color.b * brightness_mult, alpha1)
-		var color2 = Color(color.r * brightness_mult, color.g * brightness_mult, color.b * brightness_mult, alpha2)
+		# Get beam color from enum
+		var beam_color = Globals.get_beam_color(beam_color_enum)
+		var color1 = Color(beam_color.r * brightness_mult, beam_color.g * brightness_mult, beam_color.b * brightness_mult, alpha1)
+		var color2 = Color(beam_color.r * brightness_mult, beam_color.g * brightness_mult, beam_color.b * brightness_mult, alpha2)
 		
 		# Create perpendicular for width (use up vector)
 		var perp1 = Vector3(0, 1, 0).cross(direction).normalized() * width1
@@ -308,10 +309,55 @@ func apply_beam_damage_to_enemies(delta: float) -> void:
 			# Check if enemy is within beam radius
 			var collision_radius = enemy.collision_radius if "collision_radius" in enemy else 0.5
 			if distance <= (avg_width + collision_radius):
-				# Calculate damage based on beam width
+				# Calculate damage based on beam width and color
 				var width_ratio = avg_width / initial_beam_width
-				var damage = base_dps * width_ratio * damage_width_multiplier * delta
-				enemy.take_damage(damage)
+				var color_multiplier = get_damage_multiplier()
+				var damage = base_dps * width_ratio * damage_width_multiplier * color_multiplier * delta
+				if damage > 0:
+					enemy.take_damage(damage)
+				
+				# Apply status effects based on beam color
+				if enemy.has_method("accumulate_status"):
+					apply_status_effect_to_enemy(enemy, delta)
+
+func get_damage_multiplier() -> float:
+	# Different beams have different damage profiles
+	match beam_color_enum:
+		Globals.BeamColor.ORANGE:
+			return 0.3  # Below average - relies on burn DOT
+		Globals.BeamColor.GREEN:
+			return 0.0  # No direct damage - pure poison
+		Globals.BeamColor.CYAN:
+			return 0.0  # No direct damage - pure support (weakened)
+		Globals.BeamColor.BLUE:
+			return 0.0  # No direct damage - pure crowd control (freeze)
+		Globals.BeamColor.RED:
+			return 1.0  # Standard damage
+		Globals.BeamColor.YELLOW:
+			return 1.0  # Standard damage
+		Globals.BeamColor.PURPLE:
+			return 1.0  # Standard damage
+		_:
+			return 1.0
+
+func apply_status_effect_to_enemy(enemy, delta: float) -> void:
+	# Apply status effect at a fixed rate (accumulated as float)
+	var application_rate = 10.0  # Base rate per second
+	var amount_to_apply = application_rate * delta
+	
+	match beam_color_enum:
+		Globals.BeamColor.ORANGE:
+			# Orange -> Burned
+			enemy.accumulate_status(enemy.StatusEffect.BURNED, amount_to_apply)
+		Globals.BeamColor.GREEN:
+			# Green -> Poisoned
+			enemy.accumulate_status(enemy.StatusEffect.POISONED, amount_to_apply)
+		Globals.BeamColor.CYAN:
+			# Cyan -> Weakened
+			enemy.accumulate_status(enemy.StatusEffect.WEAKENED, amount_to_apply)
+		Globals.BeamColor.BLUE:
+			# Blue -> Frozen
+			enemy.accumulate_status(enemy.StatusEffect.FROZEN, amount_to_apply)
 
 func point_to_line_segment_distance(point: Vector3, line_start: Vector3, line_end: Vector3) -> float:
 	# Calculate the closest point on the line segment to the point
@@ -344,11 +390,12 @@ func update_debug_points(points: PackedVector3Array) -> void:
 		mesh_instance.position = points[i]
 		
 		# Create material for the debug point
+		var beam_color = Globals.get_beam_color(beam_color_enum)
 		var material := StandardMaterial3D.new()
 		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.albedo_color = color
+		material.albedo_color = beam_color
 		material.emission_enabled = true
-		material.emission = color
+		material.emission = beam_color
 		material.emission_energy_multiplier = 2.0
 		
 		mesh_instance.material_override = material

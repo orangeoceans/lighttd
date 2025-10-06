@@ -4,20 +4,19 @@ class_name EnemyHealthBar
 @onready var sprite_3d: Sprite3D = $Sprite3D
 @onready var sub_viewport: SubViewport = $SubViewport
 @onready var progress_bar: ProgressBar = $SubViewport/ProgressBar
+@onready var status_effects_label: RichTextLabel = $SubViewport/StatusEffects
 
 func _ready():
 	print("EnemyHealthBar _ready() called")
 	
-	# Configure SubViewport first
-	sub_viewport.size = Vector2i(200, 40)
 	# sub_viewport.transparent_bg = true
 	sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	print("SubViewport configured: size=", sub_viewport.size)
 	
 	# Configure ProgressBar sizing and style
 	if progress_bar:
-		progress_bar.size = Vector2(180, 20)
-		progress_bar.position = Vector2(10, 10)
+		# progress_bar.size = Vector2(180, 20)
+		# progress_bar.position = Vector2(10, 10)
 		progress_bar.show_percentage = false
 		progress_bar.min_value = 0
 		progress_bar.max_value = 100
@@ -37,6 +36,17 @@ func _ready():
 	else:
 		print("ERROR: ProgressBar not found!")
 	
+	# Configure StatusEffects label
+	if status_effects_label:
+		status_effects_label.bbcode_enabled = true
+		status_effects_label.fit_content = true
+		status_effects_label.scroll_active = false
+		status_effects_label.add_theme_font_size_override("normal_font_size", 32)
+		status_effects_label.text = ""  # Start empty
+		print("StatusEffects label configured")
+	else:
+		print("WARNING: StatusEffects label not found!")
+	
 	# Wait a frame for viewport to render
 	await get_tree().process_frame
 	
@@ -44,7 +54,7 @@ func _ready():
 	sprite_3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	sprite_3d.no_depth_test = true  # Draw on top, always visible
 	sprite_3d.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	sprite_3d.pixel_size = 0.01
+	sprite_3d.pixel_size = 0.015
 
 	print("EnemyHealthBar setup complete - pixel_size: ", sprite_3d.pixel_size)
 
@@ -65,6 +75,32 @@ func update_health(current: float, maximum: float) -> void:
 	else:
 		style_fg.bg_color = Color.RED
 	progress_bar.add_theme_stylebox_override("fill", style_fg)
+
+func update_status_effects(status_effects: Dictionary) -> void:
+	if not status_effects_label:
+		return
+	
+	# Build status effect string with emojis
+	var status_text = ""
+	
+	# Status effect emoji mapping
+	const STATUS_EMOJIS = {
+		0: "🔥",  # BURNED
+		1: "☠️",  # POISONED
+		2: "❄️",  # FROZEN
+		3: "💔"   # WEAKENED
+	}
+	
+	# Add each active status effect
+	for effect in status_effects.keys():
+		var stacks = status_effects[effect].stacks
+		if stacks > 0 and effect in STATUS_EMOJIS:
+			if status_text != "":
+				status_text += " "
+			status_text += STATUS_EMOJIS[effect] + "x" + str(stacks)
+	
+	# Update label
+	status_effects_label.text = status_text
 
 func _process(_delta: float) -> void:
 	# Always face camera

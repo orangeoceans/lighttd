@@ -13,8 +13,6 @@ radius = 1.10547
 [node name="enemyBody" type="CharacterBody3D" parent="."]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
 script = ExtResource("1_fjs4f")
-health = 100
-max_health = 100
 health_bar_scene = ExtResource("2_airst")
 
 [node name="enemy Visual" type="MeshInstance3D" parent="enemyBody"]
