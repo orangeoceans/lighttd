@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://c285q0ycfj2pr"]
+
+[ext_resource type="ArrayMesh" uid="uid://d1s6icpxuvofj" path="res://assets/models/environment-buildings/building01.obj" id="1_x0dqa"]
+
+[node name="Tower" type="StaticBody3D"]
+
+[node name="Building01" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.893365, -0.000310779, -0.486361)
+mesh = ExtResource("1_x0dqa")

@@ -106,6 +106,10 @@ func scale_health_for_wave(wave_number: int, scaling_factor: float) -> void:
 	health *= health_multiplier
 	max_health *= health_multiplier
 	
+	# Apply 67% health reduction to all enemies
+	health *= 0.67
+	max_health *= 0.67
+	
 	# Update health bar with new values
 	if health_bar:
 		health_bar.update_health(health, max_health)

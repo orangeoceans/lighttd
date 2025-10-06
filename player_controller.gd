@@ -696,30 +696,37 @@ func setup_choose_three_interface():
 	choose_three_container.visible = false
 
 func setup_tutorial_interface():
+	print("Setting up tutorial interface...")
 	if not hud:
 		print("ERROR: HUD not found for tutorial setup")
 		return
 	
+	print("HUD found, looking for Tutorial container...")
 	tutorial_container = hud.get_node_or_null("Tutorial")
 	if not tutorial_container:
 		print("ERROR: Tutorial container not found in HUD")
+		print("Available HUD children: ", hud.get_children())
 		return
 	
+	print("Tutorial container found, setting up components...")
 	tutorial_title_label = tutorial_container.get_node_or_null("TutorialTitle")
 	tutorial_desc_label = tutorial_container.get_node_or_null("TutorialDesc")
 	tutorial_ok_button = tutorial_container.get_node_or_null("OKButton")
 	
 	if not tutorial_title_label:
 		print("ERROR: TutorialTitle not found")
+		print("Tutorial container children: ", tutorial_container.get_children())
 	if not tutorial_desc_label:
 		print("ERROR: TutorialDesc not found")
 	if not tutorial_ok_button:
 		print("ERROR: OKButton not found")
 	else:
 		tutorial_ok_button.pressed.connect(_on_tutorial_ok_pressed)
+		print("Tutorial OK button connected successfully")
 	
 	# Hide initially
 	tutorial_container.visible = false
+	print("Tutorial interface setup complete")
 
 func show_upgrade_choices():
 	print("show_upgrade_choices called")
@@ -902,13 +909,22 @@ func _on_tutorial_ok_pressed():
 			return_to_main_menu()
 
 func show_tutorial(title: String, description: String):
+	print("show_tutorial called with title: ", title)
+	print("tutorial_container exists: ", tutorial_container != null)
+	print("tutorial_title_label exists: ", tutorial_title_label != null)
+	print("tutorial_desc_label exists: ", tutorial_desc_label != null)
+	
 	if not tutorial_container or not tutorial_title_label or not tutorial_desc_label:
 		print("ERROR: Tutorial UI not properly initialized")
+		print("  tutorial_container: ", tutorial_container)
+		print("  tutorial_title_label: ", tutorial_title_label)
+		print("  tutorial_desc_label: ", tutorial_desc_label)
 		return
 	
 	tutorial_title_label.text = title
 	tutorial_desc_label.text = description
 	tutorial_container.visible = true
+	print("Tutorial should now be visible!")
 
 func show_game_start_tutorial():
 	if tutorial_shown["game_start"]:

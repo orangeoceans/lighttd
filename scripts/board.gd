@@ -22,6 +22,14 @@ class_name Board
 
 @onready var beam : PackedScene = preload("res://scenes/beam.tscn")
 
+# Background tower scenes
+@onready var bg_tower_scenes: Array[PackedScene] = [
+	preload("res://scenes/towers/bg_tower_1.tscn"),
+	preload("res://scenes/towers/bg_tower_2.tscn"),
+	preload("res://scenes/towers/bg_tower_3.tscn"),
+	preload("res://scenes/towers/bg_tower_4.tscn")
+]
+
 # Light ray system - support for 7 rays
 const NUM_RAYS: int = 7
 var beams: Array[Beam] = []  # Store all beam instances
@@ -45,6 +53,9 @@ func _ready() -> void:
 	".............",
 	]	
 	setUpBoard(map)
+	
+	# Generate background layer after main board
+	generate_background_layer(map)
 
 func setUpBoard(rows: Array) -> void:
 	_clear_kids()
@@ -347,3 +358,145 @@ func _clear_kids() -> void: ### the IDF is interested in this one
 	for i in range(Globals.BeamColor.size()):
 		var beam_color_enum = i as Globals.BeamColor
 		Globals.collector_beam_counts[beam_color_enum] = equal_value
+
+# Generate background layer with towers and empty tiles
+func generate_background_layer(rows: Array) -> void:
+	print("Generating background layer...")
+	
+	# Create background layer container
+	var bg_layer := Node3D.new()
+	bg_layer.name = "BackgroundLayer"
+	add_child(bg_layer)
+	
+	# Add pink layer under the game board
+	add_pink_layer()
+	
+	var w = rows[0].length()
+	var h := rows.size()
+	
+	# Background layer settings
+	var bg_y_offset: float = -12.0  # Place background layer much further below main tiles (at least twice as far)
+	var tower_spawn_chance: float = 0.2  # 20% chance for a tower, 80% for empty (lower density for larger area)
+	var bg_expansion: int = 27  # Expand background grid by this many tiles in each direction (9x wider)
+	
+	# Generate background tiles for expanded area
+	for r in range(-bg_expansion, h + bg_expansion):
+		for c in range(-bg_expansion, w + bg_expansion):
+			var pos := _hex_center(c, r)
+			pos.y += bg_y_offset  # Lower the background layer
+			
+			# Always place a background tile first (if buildable_scene exists)
+			if buildable_scene:
+				var bg_tile = buildable_scene.instantiate() as Node3D
+				bg_tile.position = pos
+				# Add slight random height variation for background tiles
+				var tile_height_variation = randf_range(-0.3, 0.3)
+				bg_tile.position.y += tile_height_variation
+				# Make background tile non-interactive
+				make_non_interactive(bg_tile)
+				bg_layer.add_child(bg_tile)
+			
+			# Then randomly decide if this position gets a tower on top
+			if randf() < tower_spawn_chance:
+				# Place a random background tower
+				var tower_scene = bg_tower_scenes[randi() % bg_tower_scenes.size()]
+				var tower_instance = tower_scene.instantiate() as Node3D
+				
+				# Set position (slightly above the background tile)
+				tower_instance.position = pos
+				tower_instance.position.y += 0.2  # Raise tower slightly above background tile
+				
+				# Random rotation in 90-degree increments (0, 90, 180, 270 degrees)
+				var rotation_steps = randi() % 4  # 0, 1, 2, or 3
+				var rotation_angle = rotation_steps * PI / 2.0  # Convert to radians
+				tower_instance.rotation.y = rotation_angle
+				
+				# Add some random height variation for visual interest
+				var height_variation = randf_range(-0.1, 0.1)
+				tower_instance.position.y += height_variation
+				
+				# Make background tower non-interactive
+				make_non_interactive(tower_instance)
+				bg_layer.add_child(tower_instance)
+				
+				# Debug output
+				print("Placed bg_tower at (", c, ", ", r, ") with rotation ", rotation_steps * 90, " degrees")
+	
+	print("Background layer generation complete!")
+
+# Add a semi-opaque pink layer under the game board
+func add_pink_layer() -> void:
+	print("Adding pink layer under game board...")
+	
+	# Create a large pink plane underneath the game board
+	var pink_layer := MeshInstance3D.new()
+	pink_layer.name = "PinkLayer"
+	
+	# Create a large plane mesh
+	var plane_mesh = PlaneMesh.new()
+	plane_mesh.size = Vector2(100.0, 100.0)  # Large enough to cover the entire area
+	pink_layer.mesh = plane_mesh
+	
+	# Create pink semi-transparent material
+	var pink_material = StandardMaterial3D.new()
+	pink_material.albedo_color = Color(1.0, 0.7, 0.8, 0.3)  # Semi-opaque pink
+	pink_material.flags_transparent = true
+	pink_material.flags_unshaded = true  # Flat color, no lighting
+	pink_material.no_depth_test = false
+	pink_material.cull_mode = BaseMaterial3D.CULL_DISABLED  # Visible from both sides
+	
+	pink_layer.material_override = pink_material
+	
+	# Position the pink layer between background and game board
+	pink_layer.position = Vector3(0, -6.0, 0)  # Halfway between game board (0) and background (-12)
+	pink_layer.rotation.x = 0  # Flat horizontal plane
+	
+	# Make it non-interactive
+	make_non_interactive(pink_layer)
+	
+	add_child(pink_layer)
+	print("Pink layer added successfully!")
+
+# Recursively apply material to all MeshInstance3D nodes
+func apply_material_recursive(node: Node, material: Material) -> void:
+	if node is MeshInstance3D:
+		var mesh_instance = node as MeshInstance3D
+		mesh_instance.material_override = material
+	
+	for child in node.get_children():
+		apply_material_recursive(child, material)
+
+# Make a node and all its children non-interactive
+func make_non_interactive(node: Node) -> void:
+	# Disable collision layers for physics bodies
+	if node is RigidBody3D:
+		var rigid_body = node as RigidBody3D
+		rigid_body.collision_layer = 0
+		rigid_body.collision_mask = 0
+		rigid_body.freeze = true
+	elif node is StaticBody3D:
+		var static_body = node as StaticBody3D
+		static_body.collision_layer = 0
+		static_body.collision_mask = 0
+	elif node is CharacterBody3D:
+		var char_body = node as CharacterBody3D
+		char_body.collision_layer = 0
+		char_body.collision_mask = 0
+	elif node is Area3D:
+		var area = node as Area3D
+		area.collision_layer = 0
+		area.collision_mask = 0
+		area.monitoring = false
+		area.monitorable = false
+	
+	# Disable input processing
+	if node is Control:
+		var control = node as Control
+		control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	elif node is CollisionObject3D:
+		var collision_obj = node as CollisionObject3D
+		collision_obj.input_ray_pickable = false
+	
+	# Recursively apply to all children
+	for child in node.get_children():
+		make_non_interactive(child)

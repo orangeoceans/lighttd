@@ -84,6 +84,11 @@ func get_balance_multiplier() -> float:
 
 # Internal function to update the cached balance multiplier
 func _update_balance_multiplier() -> void:
+	# Only apply balance multiplier if a Collector tower exists
+	if not collector_tower_instance or not is_instance_valid(collector_tower_instance):
+		_cached_balance_multiplier = 1.0  # No multiplier without collector
+		return
+	
 	if collector_beam_counts.is_empty():
 		_cached_balance_multiplier = MIN_BALANCE_MULTIPLIER
 		return
