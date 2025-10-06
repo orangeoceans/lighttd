@@ -50,6 +50,7 @@ theme_override_fonts/font = ExtResource("3_x2yvf")
 text = "EXIT"
 
 [node name="Title(TODOreplace sprite)" type="Sprite2D" parent="CanvasLayer"]
+texture_filter = 1
 position = Vector2(642, 428)
 scale = Vector2(2, 2)
 texture = ExtResource("4_uhagc")
