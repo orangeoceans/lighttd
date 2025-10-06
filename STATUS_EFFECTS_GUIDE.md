@@ -28,12 +28,12 @@ A comprehensive stacking status effect system for enemies with logarithmic scali
 - **Scaling**: Logarithmic (accumulation), Linear (slow per stack)
 
 ### 4. **Weakened** 💔
-- **Effect**: Increases damage taken from all sources
-- **Multiplier**: +10% damage taken per stack
+- **Effect**: Increases damage taken from all sources (multiplicative)
+- **Multiplier**: 1.1× per stack (exponential - stacks multiply together)
 - **Duration**: 6 seconds per stack
 - **Decay**: Accumulated stacks decay by 10% per second
 - **Does NOT apply to**: DOT (Burn/Poison damage)
-- **Scaling**: Logarithmic (accumulation), Linear (damage multiplier per stack)
+- **Scaling**: Logarithmic (accumulation), Exponential (damage multiplier)
 
 ## Logarithmic Stack Accumulation
 
@@ -95,32 +95,65 @@ print("Poison stacks: ", poison_stacks)
 
 The beams have different damage profiles and status effects:
 
-| Beam | Direct Damage | Status Effect | Role |
-|------|--------------|---------------|------|
-| 🔴 **Red** | 100% | None | Pure DPS |
-| 🟠 **Orange** | 30% | 🔥 Burned | DOT hybrid |
-| 🟡 **Yellow** | 100% | None | Pure DPS |
-| 🟢 **Green** | 0% | ☠️ Poisoned | Pure DOT |
-| 🔵 **Cyan** | 0% | 💔 Weakened | Pure support |
-| 🔷 **Blue** | 0% | ❄️ Frozen | Pure CC |
-| 🟣 **Purple** | 100% | None | Pure DPS |
+| Beam | Direct Damage | Status Effect | Special | Role |
+|------|--------------|---------------|---------|------|
+| 🔴 **Red** | 100% | None | - | Pure DPS |
+| 🟠 **Orange** | 30% | 🔥 Burned | - | DOT hybrid |
+| 🟡 **Yellow** | 100% | None | **Scatters** 5 beams (40% dmg, 3.0 range) | AOE DPS |
+| 🟢 **Green** | 0% | ☠️ Poisoned | - | Pure DOT |
+| 🔵 **Cyan** | 0% | 💔 Weakened | - | Pure support |
+| 🔷 **Blue** | 0% | ❄️ Frozen | - | Pure CC |
+| 🟣 **Purple** | 100% | None | - | Pure DPS |
 
 ### Strategic Synergies
 
 **Combo 1: Weakened + DPS**
 - 🔵 Cyan beam applies Weakened stacks (0% direct damage)
-- Switch to 🔴 Red/🟡 Yellow for 100% DPS × (1.0 + 0.1 per weaken stack)
-- Result: 140% damage with 4 weaken stacks!
+- Switch to 🔴 Red/🟡 Yellow for 100% DPS × 1.1^stacks
+- Result: 146.41% damage with 4 weaken stacks!
+- Scales exponentially - 5 stacks = 161% damage!
 
 **Combo 2: Freeze + Poison**
 - 🔷 Blue beam slows enemy (0% direct damage)
 - 🟢 Green beam applies poison (0% direct damage)
 - Enemy moves slowly while taking constant DOT
 
-**Combo 3: Burn Hybrid**
+**Combo 3: Yellow Scatter AOE**
+- 🟡 Yellow beam hits enemy with 100% damage
+- Creates 5 scatter beams in random directions (3.0 range)
+- Each scatter beam does 40% damage to other enemies
+- Perfect for grouped enemies - massive AOE potential!
+
+**Combo 4: Burn Hybrid**
 - 🟠 Orange does modest direct damage (30%)
 - Plus burn DOT that decays over time
 - Good for spreading damage across multiple enemies
+
+### Yellow Beam Scatter Mechanics
+
+When a **Yellow beam** hits an enemy:
+1. **Main beam** deals 100% damage to the target
+2. **5 scatter beams** radiate from the hit enemy in consistent random directions
+3. Each scatter beam:
+   - Traces through the board like a full beam
+   - **Bounces off mirrors** and interacts with lenses/collectors
+   - Can have up to 20 bounces (same as main beam)
+   - Deals 40% of base beam damage
+   - Can hit other enemies (not the original target)
+   - Is thin (0.15 width) for precise targeting
+   - Direction is random but **consistent per enemy** (doesn't flicker between frames)
+
+**Example:** Yellow beam hits enemy in a group of 5 enemies
+- Primary target: 100% damage
+- 4 nearby enemies: Each has ~2-3 scatter beams potentially hitting them
+- Scatter beams bounce off mirrors, potentially hitting enemies around corners
+- Total damage distributed: 100% + (5 beams × 40% × 2-3 hits) = 500-700% total damage potential!
+
+**Visual:** Scatter beams appear as thin, semi-transparent yellow beams (60% brightness, 50% opacity) extending from hit enemies like lightning arcs, bouncing off mirrors.
+
+**Advanced Strategy:** Position mirrors to redirect scatter beams toward enemy clusters for maximum coverage!
+
+Yellow beam excels at dealing with tightly packed enemy groups!
 
 ## Status Effect Math Examples
 
@@ -137,9 +170,15 @@ Time to reach 3 stacks: ~3.5 seconds of continuous beam exposure
 
 ### Weakened Enemy (4 stacks)
 ```
-Base multiplier: 10% per stack
-Total multiplier: 4 * 0.10 = 0.40
-Damage multiplier: 1.0 + 0.40 = 1.40 (140% damage taken)
+Multiplier: 1.1× per stack (exponential)
+Total multiplier: 1.1^4 = 1.4641 (146.41% damage taken)
+
+Stack breakdown:
+1 stack: 1.1× (10% more)
+2 stacks: 1.21× (21% more)
+3 stacks: 1.331× (33.1% more)
+4 stacks: 1.4641× (46.41% more)
+5 stacks: 1.6105× (61.05% more)
 
 Time to reach 4 stacks: ~7.5 seconds of continuous beam exposure
 ```

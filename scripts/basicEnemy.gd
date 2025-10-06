@@ -71,10 +71,12 @@ func _physics_process(delta: float) -> void:
 func take_damage(damage: float, apply_weakened: bool = true) -> void:
 	var final_damage = damage
 	
-	# Apply weakened multiplier (stacks are already logarithmic)
+	# Apply weakened multiplier (exponential - each stack multiplies)
 	if apply_weakened and has_status(StatusEffect.WEAKENED):
 		var weaken_stacks = status_effects[StatusEffect.WEAKENED].stacks
-		var multiplier = 1.0 + (weaken_stacks * WEAKEN_MULTIPLIER_PER_STACK)
+		# Each stack multiplies damage by (1 + WEAKEN_MULTIPLIER_PER_STACK)
+		# e.g., 4 stacks: 1.1^4 = 1.4641 (46.41% more damage)
+		var multiplier = pow(1.0 + WEAKEN_MULTIPLIER_PER_STACK, weaken_stacks)
 		final_damage *= multiplier
 	
 	health -= final_damage

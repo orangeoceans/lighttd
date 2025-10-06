@@ -6,6 +6,7 @@ var mesh_instance : MeshInstance3D = null
 var debug_points_parent : Node3D = null
 
 @onready var current_beam_segments: Array = []  # Store beam segments for damage calculation [{p1, p2, width1, width2}]
+@onready var current_scatter_segments: Array = []  # Store scatter beam segments for rendering
 @onready var is_active : bool = false
 @onready var time_elapsed: float = 0.0  # For pulsating effect
 
@@ -28,6 +29,11 @@ var concave_lens_multiplier: float = 1.5  # Each concave lens widens beam to 150
 var pulse_speed: float = 3.0  # Speed of pulsating effect
 var pulse_amount: float = 0.15  # How much the beam pulses (0.0 to 1.0)
 var damage_width_multiplier: float = 2.0  # Damage scales with width
+
+# Yellow scatter beam settings
+var scatter_beam_count: int = 4
+var scatter_beam_damage_multiplier: float = 0.4  # 40% of main beam damage
+var scatter_beam_width: float = 0.1
 
 func _process(delta: float) -> void:
 	if self.board == null:
@@ -281,13 +287,63 @@ func update_beam_mesh(points: PackedVector3Array, widths: PackedFloat32Array, is
 		mesh.surface_set_color(color2)
 		mesh.surface_add_vertex(v3)
 	
+	# Render scatter beams for yellow beam
+	if beam_color_enum == Globals.BeamColor.YELLOW and is_active:
+		render_scatter_beams(mesh)
+	
 	mesh.surface_end()
 
+func render_scatter_beams(mesh: ImmediateMesh) -> void:
+	# Render all scatter beam segments
+	for segment in current_scatter_segments:
+		var p1 = segment.p1
+		var p2 = segment.p2
+		
+		# Direction for perpendicular calculation
+		var direction = (p2 - p1).normalized()
+		
+		# Get beam color (slightly dimmer than main beam)
+		var beam_color = Globals.get_beam_color(beam_color_enum)
+		var brightness_mult = 0.6  # Dimmer than main beam
+		var alpha = 0.3  # More transparent
+		var color = Color(beam_color.r * brightness_mult, beam_color.g * brightness_mult, beam_color.b * brightness_mult, alpha)
+		
+		# Create perpendicular for width (use up vector)
+		var perp = Vector3(0, 1, 0).cross(direction).normalized() * scatter_beam_width
+		
+		# Create quad as two triangles
+		var v1 = p1 + perp
+		var v2 = p1 - perp
+		var v3 = p2 + perp
+		var v4 = p2 - perp
+		
+		# Triangle 1
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v1)
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v2)
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v3)
+		
+		# Triangle 2
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v2)
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v4)
+		mesh.surface_set_color(color)
+		mesh.surface_add_vertex(v3)
+
 func apply_beam_damage_to_enemies(delta: float) -> void:
+	# Clear previous scatter segments
+	current_scatter_segments.clear()
+	
 	# Get all enemies in the scene
 	var enemies = board.get_tree().get_nodes_in_group("enemies")
 	if enemies.is_empty():
 		return
+	
+	# Track enemies hit by main beam (for scatter logic)
+	var hit_enemies: Array = []
 	
 	# Check each beam segment against all enemies
 	for segment in current_beam_segments:
@@ -313,12 +369,114 @@ func apply_beam_damage_to_enemies(delta: float) -> void:
 				var width_ratio = avg_width / initial_beam_width
 				var color_multiplier = get_damage_multiplier()
 				var damage = base_dps * width_ratio * damage_width_multiplier * color_multiplier * delta
+				
 				if damage > 0:
 					enemy.take_damage(damage)
 				
 				# Apply status effects based on beam color
 				if enemy.has_method("accumulate_status"):
 					apply_status_effect_to_enemy(enemy, delta)
+				
+				# Track hit for scatter beams (yellow only)
+				if beam_color_enum == Globals.BeamColor.YELLOW and not hit_enemies.has(enemy):
+					hit_enemies.append(enemy)
+	
+	# Apply scatter beams for yellow beam
+	if beam_color_enum == Globals.BeamColor.YELLOW:
+		apply_scatter_beams(hit_enemies, enemies, delta)
+
+func trace_scatter_beam(origin: Vector3, direction: Vector2) -> Array:
+	# Trace a scatter beam through mirrors, returning array of segments
+	var segments = []
+	var ray_origin_xz = Vector2(origin.x, origin.z)
+	var ray_direction = direction.normalized()
+	var remaining_length = max_ray_length
+	var current_pos_3d = origin
+	
+	for bounce in range(max_bounces):
+		if remaining_length <= 0:
+			break
+		
+		var hit_info = cast_ray(ray_origin_xz, ray_direction, remaining_length)
+		
+		if not hit_info.is_empty():
+			var distance_2d = ray_origin_xz.distance_to(hit_info.position)
+			remaining_length -= distance_2d
+			
+			var hit_pos_3d = Vector3(hit_info.position.x, origin.y, hit_info.position.y)
+			
+			# Store segment
+			segments.append({
+				"p1": current_pos_3d,
+				"p2": hit_pos_3d
+			})
+			
+			# Stop at collectors
+			if hit_info.tower_type == "collector":
+				break
+			
+			# Lenses don't change direction, mirrors do
+			if hit_info.tower_type == "mirror":
+				var dot_product = ray_direction.dot(hit_info.normal)
+				ray_direction = ray_direction - 2 * dot_product * hit_info.normal
+				ray_direction = ray_direction.normalized()
+			
+			# Update position for next bounce
+			ray_origin_xz = hit_info.position
+			current_pos_3d = hit_pos_3d
+		else:
+			# No hit, extend to max length
+			var end_xz = ray_origin_xz + ray_direction * remaining_length
+			var end_pos_3d = Vector3(end_xz.x, origin.y, end_xz.y)
+			segments.append({
+				"p1": current_pos_3d,
+				"p2": end_pos_3d
+			})
+			break
+	
+	return segments
+
+func apply_scatter_beams(hit_enemies: Array, all_enemies: Array, delta: float) -> void:
+	# For each enemy hit by the main beam, create scatter beams
+	for hit_enemy in hit_enemies:
+		if not is_instance_valid(hit_enemy):
+			continue
+		
+		var scatter_origin = hit_enemy.global_position
+		
+		# Use enemy instance ID as seed for consistent random directions
+		var enemy_seed = hit_enemy.get_instance_id()
+		
+		# Create scatter beams in consistent random directions
+		for i in range(scatter_beam_count):
+			# Generate consistent angle using seed
+			seed(enemy_seed + i)
+			var angle = randf() * TAU  # TAU = 2*PI
+			var scatter_direction = Vector2(cos(angle), sin(angle))
+			
+			# Trace scatter beam through mirrors
+			var scatter_segments = trace_scatter_beam(scatter_origin, scatter_direction)
+			
+			# Store all segments for rendering
+			for segment in scatter_segments:
+				current_scatter_segments.append(segment)
+				
+				# Check if this segment hits any enemies
+				for target_enemy in all_enemies:
+					if not is_instance_valid(target_enemy) or target_enemy == hit_enemy:
+						continue
+					
+					var target_pos = target_enemy.global_position
+					var distance = point_to_line_segment_distance(target_pos, segment.p1, segment.p2)
+					
+					var collision_radius = target_enemy.collision_radius if "collision_radius" in target_enemy else 0.5
+					if distance <= (scatter_beam_width + collision_radius):
+						# Apply reduced damage
+						var scatter_damage = base_dps * scatter_beam_damage_multiplier * delta
+						target_enemy.take_damage(scatter_damage)
+	
+	# Reset random seed to avoid affecting other random calls
+	randomize()
 
 func get_damage_multiplier() -> float:
 	# Different beams have different damage profiles
