@@ -118,7 +118,7 @@ func _update_balance_multiplier() -> void:
 	
 	# Apply exponential curve: use ^3 to heavily favor near-perfect balance
 	# This makes 50/50 give ~1.4×, while perfect balance still gives 10×
-	var curved_value = pow(normalized_entropy, 6.0)
+	var curved_value = pow(normalized_entropy, 4.0)
 	
 	# Map to multiplier range [1.0, 10.0]
 	_cached_balance_multiplier = MIN_BALANCE_MULTIPLIER + (MAX_BALANCE_MULTIPLIER - MIN_BALANCE_MULTIPLIER) * curved_value

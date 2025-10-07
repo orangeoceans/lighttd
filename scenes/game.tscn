@@ -202,19 +202,29 @@ offset_bottom = 704.0
 
 [node name="StartWave" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_left = 199.0
+offset_left = 264.0
 offset_top = 3.0
-offset_right = 296.0
+offset_right = 365.0
 offset_bottom = 45.0
 theme_override_fonts/font = ExtResource("7_0tnpc")
 text = "Next Wave
 "
 
+[node name="BeamInfo" type="Button" parent="HUD/BottomBar"]
+layout_mode = 0
+offset_left = 374.0
+offset_top = 3.0
+offset_right = 475.0
+offset_bottom = 45.0
+theme_override_fonts/font = ExtResource("7_0tnpc")
+text = "Beam Info
+"
+
 [node name="ResetCamera" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_left = 305.0
+offset_left = 484.0
 offset_top = 3.0
-offset_right = 439.0
+offset_right = 618.0
 offset_bottom = 45.0
 theme_override_fonts/font = ExtResource("7_0tnpc")
 text = "Reset Camera"
@@ -248,7 +258,8 @@ offset_bottom = 188.0
 
 [node name="ChooseThreeContainer" type="HBoxContainer" parent="HUD/ChooseThree"]
 layout_mode = 0
-offset_right = 658.0
+offset_left = -99.0
+offset_right = 721.0
 offset_bottom = 398.0
 theme_override_constants/separation = 20
 
@@ -261,7 +272,7 @@ color = Color(0.901961, 0.882353, 0.992157, 1)
 layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("7_gee14")
@@ -274,7 +285,7 @@ vertical_alignment = 1
 layout_mode = 0
 offset_left = 14.0
 offset_top = 100.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("8_0tnpc")
@@ -285,9 +296,9 @@ vertical_alignment = 1
 
 [node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel1"]
 layout_mode = 0
-offset_left = 43.0
+offset_left = 70.0
 offset_top = 334.0
-offset_right = 163.0
+offset_right = 190.0
 offset_bottom = 376.0
 theme_override_fonts/font = ExtResource("7_gee14")
 theme_override_font_sizes/font_size = 24
@@ -302,7 +313,7 @@ color = Color(0.901961, 0.882353, 0.992157, 1)
 layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("7_gee14")
@@ -315,7 +326,7 @@ vertical_alignment = 1
 layout_mode = 0
 offset_left = 14.0
 offset_top = 100.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("8_0tnpc")
@@ -326,9 +337,9 @@ vertical_alignment = 1
 
 [node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel2"]
 layout_mode = 0
-offset_left = 43.0
+offset_left = 70.0
 offset_top = 334.0
-offset_right = 163.0
+offset_right = 190.0
 offset_bottom = 376.0
 theme_override_fonts/font = ExtResource("7_gee14")
 theme_override_font_sizes/font_size = 24
@@ -343,7 +354,7 @@ color = Color(0.901961, 0.882353, 0.992157, 1)
 layout_mode = 0
 offset_left = 14.0
 offset_top = 11.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 74.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("7_gee14")
@@ -356,7 +367,7 @@ vertical_alignment = 1
 layout_mode = 0
 offset_left = 14.0
 offset_top = 100.0
-offset_right = 192.0
+offset_right = 247.0
 offset_bottom = 300.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("8_0tnpc")
@@ -367,16 +378,15 @@ vertical_alignment = 1
 
 [node name="ChooseButton" type="Button" parent="HUD/ChooseThree/ChooseThreeContainer/Panel3"]
 layout_mode = 0
-offset_left = 43.0
+offset_left = 70.0
 offset_top = 334.0
-offset_right = 163.0
+offset_right = 190.0
 offset_bottom = 376.0
 theme_override_fonts/font = ExtResource("7_gee14")
 theme_override_font_sizes/font_size = 24
 text = "Select"
 
 [node name="Tutorial" type="Control" parent="HUD"]
-visible = false
 anchors_preset = 0
 offset_left = 430.0
 offset_top = 97.0
@@ -385,18 +395,19 @@ offset_bottom = 137.0
 
 [node name="Panel1" type="ColorRect" parent="HUD/Tutorial"]
 layout_mode = 0
-offset_left = -32.0
-offset_right = 467.0
-offset_bottom = 430.0
+offset_left = -76.0
+offset_top = -39.0
+offset_right = 504.0
+offset_bottom = 499.0
 size_flags_horizontal = 3
 color = Color(0.901961, 0.882353, 0.992157, 1)
 
 [node name="TutorialTitle" type="RichTextLabel" parent="HUD/Tutorial"]
 layout_mode = 0
 offset_left = 13.0
-offset_top = 14.0
+offset_top = -40.0
 offset_right = 413.0
-offset_bottom = 77.0
+offset_bottom = 23.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("7_gee14")
 theme_override_font_sizes/normal_font_size = 20
@@ -407,9 +418,9 @@ vertical_alignment = 1
 [node name="TutorialDesc" type="RichTextLabel" parent="HUD/Tutorial"]
 layout_mode = 0
 offset_left = -12.0
-offset_top = 74.0
+offset_top = 22.0
 offset_right = 444.0
-offset_bottom = 335.0
+offset_bottom = 422.0
 theme_override_colors/default_color = Color(0.171793, 8.48304e-07, 0.107886, 1)
 theme_override_fonts/normal_font = ExtResource("8_0tnpc")
 theme_override_font_sizes/normal_font_size = 20
@@ -421,9 +432,9 @@ vertical_alignment = 1
 [node name="OKButton" type="Button" parent="HUD/Tutorial"]
 layout_mode = 0
 offset_left = 163.0
-offset_top = 355.0
+offset_top = 439.0
 offset_right = 265.0
-offset_bottom = 397.0
+offset_bottom = 481.0
 theme_override_fonts/font = ExtResource("7_gee14")
 theme_override_font_sizes/font_size = 24
 text = "OK"

@@ -42,6 +42,7 @@ offset_right = 390.0
 offset_bottom = 55.0
 theme_override_fonts/normal_font = ExtResource("2_0b2sg")
 theme_override_font_sizes/normal_font_size = 40
+bbcode_enabled = true
 text = "test"
 scroll_active = false
 horizontal_alignment = 1

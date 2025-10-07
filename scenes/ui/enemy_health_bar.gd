@@ -81,12 +81,12 @@ func update_status_effects(status_effects: Dictionary) -> void:
 	# Build status effect string with emojis
 	var status_text = ""
 	
-	# Status effect emoji mapping
+	# Status effect BBCode mapping
 	const STATUS_EMOJIS = {
-		0: "🔥",  # BURNED
-		1: "☠️",  # POISONED
-		2: "❄️",  # FROZEN
-		3: "💔"   # WEAKENED
+		0: "[color=red]B[/color]",    # BURNED - red B
+		1: "[color=green]P[/color]",  # POISONED - green P
+		2: "[color=blue]F[/color]",   # FROZEN - blue F
+		3: "[color=cyan]W[/color]"    # WEAKENED - cyan W
 	}
 	
 	# Add each active status effect

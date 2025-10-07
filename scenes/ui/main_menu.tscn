@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://3df665q7ym5g"]
+[gd_scene load_steps=6 format=3 uid="uid://3df665q7ym5g"]
 
 [ext_resource type="Script" uid="uid://bul5rcs50mrag" path="res://scripts/main_menu.gd" id="1_sl1te"]
-[ext_resource type="Texture2D" uid="uid://qw37axqek4ij" path="res://assets/fonts/SCROLL TEXTURE.PNG" id="2_m1kxf"]
+[ext_resource type="Texture2D" uid="uid://qw37axqek4ij" path="res://assets/SCROLL TEXTURE.PNG" id="2_m1kxf"]
 [ext_resource type="FontFile" uid="uid://c818j6bi3j5hg" path="res://assets/fonts/VIDEOPHREAK.ttf" id="3_x2yvf"]
-[ext_resource type="Texture2D" uid="uid://b0omx0dsffctb" path="res://assets/fonts/CRYSTAL TOWER LUXOGENICS LOGO.PNG" id="4_uhagc"]
+[ext_resource type="Texture2D" uid="uid://b0omx0dsffctb" path="res://assets/CRYSTAL TOWER LUXOGENICS LOGO.PNG" id="4_uhagc"]
+[ext_resource type="Texture2D" uid="uid://82445socx5iu" path="res://assets/STL.png" id="4_x2yvf"]
 
 [node name="mainMenu" type="Node2D"]
 script = ExtResource("1_sl1te")
@@ -29,10 +30,10 @@ grow_vertical = 2
 
 [node name="Start Game" type="Button" parent="CanvasLayer/Control"]
 layout_mode = 0
-offset_left = 89.0
-offset_top = 91.0
-offset_right = 210.0
-offset_bottom = 151.0
+offset_left = 32.0
+offset_top = 503.0
+offset_right = 312.0
+offset_bottom = 623.0
 focus_neighbor_top = NodePath("../Exit Game")
 focus_neighbor_bottom = NodePath("../Exit Game")
 theme_override_fonts/font = ExtResource("3_x2yvf")
@@ -40,18 +41,23 @@ text = "START"
 
 [node name="Exit Game" type="Button" parent="CanvasLayer/Control"]
 layout_mode = 0
-offset_left = 89.0
-offset_top = 169.0
-offset_right = 210.0
-offset_bottom = 229.0
+offset_left = 32.0
+offset_top = 641.0
+offset_right = 312.0
+offset_bottom = 701.0
 focus_neighbor_top = NodePath("../Start Game")
 focus_neighbor_bottom = NodePath("../Start Game")
 theme_override_fonts/font = ExtResource("3_x2yvf")
 text = "EXIT"
 
+[node name="Stl" type="Sprite2D" parent="CanvasLayer"]
+position = Vector2(1149.3751, 602.30304)
+scale = Vector2(0.27507052, 0.27507055)
+texture = ExtResource("4_x2yvf")
+
 [node name="Title(TODOreplace sprite)" type="Sprite2D" parent="CanvasLayer"]
 texture_filter = 1
-position = Vector2(642, 428)
+position = Vector2(642, 340)
 scale = Vector2(2, 2)
 texture = ExtResource("4_uhagc")
 

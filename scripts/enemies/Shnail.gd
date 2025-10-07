@@ -5,8 +5,8 @@ extends "res://scripts/basicEnemy.gd"
 func _ready():
 	# Set stats before calling super._ready() so health bar initializes correctly
 	base_speed = 1.0   # Slow speed
-	health = 500.0     # Very high health (very bulky)
-	max_health = 500.0
+	health = 400.0     # Very high health (very bulky)
+	max_health = 400.0
 	
 	super._ready()
 	

@@ -26,7 +26,7 @@ var current_wave: int = 1
 @onready var spawn_timer: Timer = Timer.new()
 
 var current_wave_enemy_types: Array[String] = []  # Multiple enemy types per wave
-var health_scaling_per_wave: float = 1.2  # 20% more health per wave
+var health_scaling_per_wave: float = 1.1  # 10% more health per wave
 
 var scene_path: Path3D = null
 var enemies_to_spawn: int = 0

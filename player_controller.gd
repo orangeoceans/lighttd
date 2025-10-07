@@ -38,20 +38,19 @@ var camera_defaults_stored: bool = false
 # Beam activation tracking
 var active_beams: Array[Beam] = []  # Currently active beams
 
-# UI References
 var tower_option_control: Control = null
 var mirror_option_button: Button = null
 var concave_option_button: Button = null
 var convex_option_button: Button = null
 var collector_option_button: Button = null
-var move_button: Button = null
-var delete_button: Button = null
-var tower_name_label: RichTextLabel = null
+@export var move_button: Button = null
+@export var delete_button: Button = null
+@export var tower_name_label: RichTextLabel = null
+@export var beam_info_button: Button = null
 var tower_controls_bg: ColorRect = null
 var tower_options_bg: ColorRect = null
 var tower_controls_tween: Tween = null
 var tower_options_tween: Tween = null
-
 # Audio system
 var audio_player: AudioStreamPlayer = null
 var title_music: AudioStream = null
@@ -145,6 +144,13 @@ func _ready():
 			delete_button.visible = false  # Hide initially since no tower is selected
 		else:
 			print("WARNING: DeleteButton not found in HUD")
+		
+		# Find and connect BeamInfo button
+		beam_info_button = hud.get_node_or_null("BottomBar/BeamInfo")
+		if beam_info_button:
+			beam_info_button.pressed.connect(_on_beam_info_button_pressed)
+		else:
+			print("WARNING: BeamInfo button not found in HUD")
 		
 		# Find TowerName label
 		tower_name_label = hud.get_node_or_null("TowerControls/TowerName")
@@ -648,6 +654,10 @@ func _on_delete_button_pressed():
 	if selected_tower and is_instance_valid(selected_tower):
 		delete_selected_tower()
 
+func _on_beam_info_button_pressed():
+	# Show beam information tutorial
+	show_beam_info_tutorial()
+
 func update_tower_name_display():
 	if not tower_name_label:
 		return
@@ -984,6 +994,21 @@ func show_dual_beam_tutorial():
 		"Dual Beam System!",
 		"You now have multiple beam colors! Use 'A' and 'S' keys to activate different beams.\n\nOnly TWO beams can be active at once. Press a key to activate that beam, press again to deactivate it.\n\nDifferent beam colors have unique effects - experiment to find powerful combinations!"
 	)
+
+func show_beam_info_tutorial():
+	# Always show beam info (no need to track if shown before)
+	var beam_info_text = ""
+	
+	# Add info for each beam color
+	beam_info_text += "[color=red]RED[/color]: 100% damage + 50% bonus vs Burned enemies\n\n"
+	beam_info_text += "[color=orange]ORANGE[/color]: 30% direct damage + applies Burn (4 dmg/sec per stack). Burn wears off over time.\n\n"
+	beam_info_text += "[color=yellow]YELLOW[/color]: 100% damage + enemies hit will scatter 4 smaller beams (40% dmg each).\n\n"
+	beam_info_text += "[color=green]GREEN[/color]: No direct damage, but applies Poison (1.5 dmg/sec per stack). Poison never wears off.\n\n"
+	beam_info_text += "[color=cyan]CYAN[/color]: No direct damage, but applies Weakened (1.1× dmg taken per stack). Weakened wears off over time.\n\n"
+	beam_info_text += "[color=blue]BLUE[/color]: No direct damage, but applies Frozen (15% slow per stack). Frozen wears off over time.\n\n"
+	beam_info_text += "[color=purple]PURPLE BEAM[/color]: 100% damage + 50% bonus vs Frozen enemies"
+	
+	show_tutorial("Beam Color Reference", beam_info_text)
 
 # Tower controls background animation
 func start_tower_controls_pulsate():
