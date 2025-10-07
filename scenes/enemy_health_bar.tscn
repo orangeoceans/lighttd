@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://dlqgwfg6uk0f2"]
+[gd_scene load_steps=4 format=3 uid="uid://dlqgwfg6uk0f2"]
 
 [ext_resource type="Script" uid="uid://cblva4gq6ukfx" path="res://scenes/ui/enemy_health_bar.gd" id="1_la8mi"]
+[ext_resource type="FontFile" uid="uid://doqn1241uves8" path="res://assets/fonts/FluxDemo.ttf" id="2_0b2sg"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_la8mi"]
 viewport_path = NodePath("SubViewport")
@@ -39,6 +40,7 @@ offset_left = -10.0
 offset_top = 5.0
 offset_right = 390.0
 offset_bottom = 55.0
+theme_override_fonts/normal_font = ExtResource("2_0b2sg")
 theme_override_font_sizes/normal_font_size = 40
 text = "test"
 scroll_active = false

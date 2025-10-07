@@ -353,11 +353,13 @@ func _clear_kids() -> void: ### the IDF is interested in this one
 	Globals.collector_tower_instance = null
 	Globals.collector_beam_counts.clear()
 	
-	# Initialize all beam colors to equal values
-	var equal_value = Globals.collector_total_count / 7.0
+	# Initialize with 100% red beam
 	for i in range(Globals.BeamColor.size()):
 		var beam_color_enum = i as Globals.BeamColor
-		Globals.collector_beam_counts[beam_color_enum] = equal_value
+		if beam_color_enum == Globals.BeamColor.RED:
+			Globals.collector_beam_counts[beam_color_enum] = Globals.collector_total_count
+		else:
+			Globals.collector_beam_counts[beam_color_enum] = 0.0
 
 # Generate background layer with towers and empty tiles
 func generate_background_layer(rows: Array) -> void:
@@ -418,9 +420,6 @@ func generate_background_layer(rows: Array) -> void:
 				# Make background tower non-interactive
 				make_non_interactive(tower_instance)
 				bg_layer.add_child(tower_instance)
-				
-				# Debug output
-				print("Placed bg_tower at (", c, ", ", r, ") with rotation ", rotation_steps * 90, " degrees")
 	
 	print("Background layer generation complete!")
 

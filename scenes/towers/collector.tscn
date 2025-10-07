@@ -9,7 +9,7 @@ script = ExtResource("1_w6v4q")
 tower_type = "collector"
 
 [node name="2025-10-05_tower-01_rigged_v2" parent="." instance=ExtResource("3_ugm0u")]
-transform = Transform3D(0.4, 0, 0, 0, -1.74846e-08, -0.4, 0, 0.4, -1.74846e-08, 0, 0, 0)
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
 
 [node name="Gem" type="Node3D" parent="."]
 

@@ -74,13 +74,14 @@ var tutorial_ok_button: Button = null
 var tutorial_shown: Dictionary = {
 	"game_start": false,
 	"first_tower": false,
-	"collector_unlock": false
+	"collector_unlock": false,
+	"dual_beam": false
 }
 
 # Player progression
 var unlocked_beam_colors: Array[String] = ["red"]  # Start with red only
 var unlocked_tower_types: Array[String] = ["mirror"]  # Start with mirrors only
-var ccollector_tower_unlocked: bool = false
+var collector_tower_unlocked: bool = false
 var collector_tower_placed: bool = false
 var any_tower_placed: bool = false  # Track if any towers have been placed
 
@@ -99,9 +100,7 @@ func _ready():
 		enemy_controller.all_enemies_cleared.connect(_on_wave_completed)
 		enemy_controller.wave_started.connect(_on_wave_started)
 		enemy_controller.enemy_reached_end.connect(_on_enemy_reached_end)
-		print("Connected to enemy controller for audio system and lives system")
 	else:
-		print("WARNING: Enemy controller not found, will try to connect later")
 		# Try to connect later when the enemy controller is ready
 		call_deferred("connect_to_enemy_controller")
 	
@@ -192,11 +191,6 @@ func _process(_delta):
 	handle_beam_activation()
 	handle_camera_controls()
 	handle_player_controls()
-	
-	# Debug: Test upgrade interface with U key
-	if Input.is_action_just_pressed("ui_up"):  # U key for testing
-		print("DEBUG: Manually triggering upgrade interface")
-		show_upgrade_choices()
 
 func get_selected_tower_type() -> String:
 	# Check which button is pressed and if tower type is unlocked
@@ -206,7 +200,7 @@ func get_selected_tower_type() -> String:
 		return "concave_lens"
 	elif convex_option_button and convex_option_button.button_pressed and "convex_lens" in unlocked_tower_types:
 		return "convex_lens"
-	elif collector_option_button and collector_option_button.button_pressed and ccollector_tower_unlocked and not collector_tower_placed:
+	elif collector_option_button and collector_option_button.button_pressed and collector_tower_unlocked and not collector_tower_placed:
 		return "collector"
 	
 	# Return first unlocked tower type as fallback
@@ -247,13 +241,11 @@ func handle_beam_activation() -> void:
 				# Activate this beam
 				beam.is_active = true
 				active_beams.append(beam)
-				print("Beam ", i, " (", char(beam.key), ") activated")
 		else:
 			# Key not pressed, deactivate this beam
 			if beam.is_active:
 				beam.is_active = false
 				active_beams.erase(beam)
-				print("Beam ", i, " (", char(beam.key), ") deactivated")
 
 func handle_camera_controls():
 	if not camera_rig:
@@ -736,12 +728,32 @@ func show_upgrade_choices():
 	
 	var available_upgrades = get_available_upgrades()
 	print("Available upgrades: ", available_upgrades.size())
-	available_upgrades.shuffle()
 	
-	# Store the shuffled upgrades for later use
+	# Store the upgrades for later use
 	current_upgrade_choices.clear()
-	for i in range(min(3, available_upgrades.size())):
-		current_upgrade_choices.append(available_upgrades[i])
+	
+	# Check if Collector is available and guarantee it appears
+	var collector_upgrade = null
+	var other_upgrades = []
+	
+	for upgrade in available_upgrades:
+		if upgrade.type == "collector_tower":
+			collector_upgrade = upgrade
+		else:
+			other_upgrades.append(upgrade)
+	
+	# Shuffle the other upgrades
+	other_upgrades.shuffle()
+	
+	# If collector is available, always include it first
+	if collector_upgrade:
+		current_upgrade_choices.append(collector_upgrade)
+		print("Collector guaranteed in upgrades!")
+	
+	# Fill remaining slots with other upgrades
+	var remaining_slots = min(3 - current_upgrade_choices.size(), other_upgrades.size())
+	for i in range(remaining_slots):
+		current_upgrade_choices.append(other_upgrades[i])
 	
 	# Show up to 3 random upgrades
 	for i in range(current_upgrade_choices.size()):
@@ -761,11 +773,12 @@ func get_available_upgrades() -> Array:
 	
 	# Beam color upgrades (matching the actual enum order)
 	var beam_descriptions = {
-		"orange": "30% direct damage + applies Burn DOT (4 dmg/sec per stack)",
-		"yellow": "100% damage + scatters 4 beams (40% dmg each) for AOE",
-		"green": "0% direct damage + applies Poison DOT (1.5 dmg/sec per stack)",
-		"cyan": "0% direct damage + applies Weakened (1.1× dmg taken per stack)",
-		"blue": "0% direct damage + applies Frozen (15% slow per stack)",
+		"red": "100% damage + 50% bonus damage vs Burned enemies",
+		"orange": "30% direct damage + applies Burn (4 dmg/sec per stack).\nBurn wears off over time.",
+		"yellow": "100% damage + enemies hit will scatter 4 smaller beams (40% dmg each).",
+		"green": "No direct damage, but applies Poison (1.5 dmg/sec per stack).\nPoison never wears off.",
+		"cyan": "No direct damage, but applies Weakened (1.1× dmg taken per stack).\nWeakened wears off over time.",
+		"blue": "No direct damage, but applies Frozen (15% slow per stack).\nFrozen wears off over time.",
 		"purple": "100% damage + 50% bonus damage vs Frozen enemies"
 	}
 	
@@ -779,36 +792,37 @@ func get_available_upgrades() -> Array:
 				"value": color
 			})
 	
-	# Tower type upgrades
-	if "concave_lens" not in unlocked_tower_types:
-		upgrades.append({
-			"name": "Concave Lens",
-			"description": "Spreads beams wider for area coverage",
-			"type": "tower_type",
-			"value": "concave_lens"
-		})
-	
-	if "convex_lens" not in unlocked_tower_types:
-		upgrades.append({
-			"name": "Convex Lens", 
-			"description": "Focuses beams for concentrated damage",
-			"type": "tower_type",
-			"value": "convex_lens"
-		})
-	
-	# Collector tower upgrade (only show if unlocked but not placed)
-	if ccollector_tower_unlocked and not collector_tower_placed:
-		upgrades.append({
-			"name": "Collector Tower",
-			"description": "Place the special collector tower to gather light energy",
-			"type": "ccollector_tower",
-			"value": "ccollector_tower"
-		})
+	# Tower type upgrades (only available after unlocking 2+ beam colors)
+	if unlocked_beam_colors.size() >= 2:
+		if "concave_lens" not in unlocked_tower_types:
+			upgrades.append({
+				"name": "Concave Lens",
+				"description": "Spreads beams wider for area coverage but less damage.",
+				"type": "tower_type",
+				"value": "concave_lens"
+			})
+		
+		if "convex_lens" not in unlocked_tower_types:
+			upgrades.append({
+				"name": "Convex Lens", 
+				"description": "Focuses beams for concentrated damage but less area.",
+				"type": "tower_type",
+				"value": "convex_lens"
+			})
+		
+		# Collector tower - always available until unlocked (after 2+ beams)
+		if not collector_tower_unlocked:
+			upgrades.append({
+				"name": "Collector Tower",
+				"description": "Place the special collector tower to gather light beams and increase your damage output.",
+				"type": "collector_tower",
+				"value": "collector_tower"
+			})
 	
 	# Lives upgrade
 	upgrades.append({
 		"name": "Extra Lives",
-		"description": "Gain +3 lives to survive more enemy breaches",
+		"description": "Gain +3 lives to survive more enemy breaches.",
 		"type": "lives",
 		"value": 3
 	})
@@ -832,15 +846,20 @@ func apply_upgrade(panel_index: int):
 	match upgrade.type:
 		"beam_color":
 			unlocked_beam_colors.append(upgrade.value)
-			print("Unlocked ", upgrade.value, " beam. Total unlocked colors: ", unlocked_beam_colors)
+			print("Unlocked ", upgrade.value, " beam. Total unlocked beams: ", unlocked_beam_colors.size())
+			
+			# Show dual beam tutorial when second beam is unlocked
+			if unlocked_beam_colors.size() == 2:
+				show_dual_beam_tutorial()
+			
 			# Refresh beams to add new color
 			refresh_beams()
 		"tower_type":
 			unlocked_tower_types.append(upgrade.value)
 			print("Unlocked ", upgrade.value, " tower. Total unlocked towers: ", unlocked_tower_types)
-		"ccollector_tower":
-			ccollector_tower_unlocked = true
-			print("Unlocked ccollector tower")
+		"collector_tower":
+			collector_tower_unlocked = true
+			print("Unlocked collector tower")
 			# Show collector tutorial when unlocked
 			show_collector_tutorial()
 		"lives":
@@ -861,11 +880,11 @@ func update_progression_ui():
 	if convex_option_button:
 		convex_option_button.disabled = "convex_lens" not in unlocked_tower_types
 	if collector_option_button:
-		collector_option_button.disabled = not ccollector_tower_unlocked or collector_tower_placed
+		collector_option_button.disabled = not collector_tower_unlocked or collector_tower_placed
 	
-	# Hide/show color ratio bar based on ccollector tower unlock AND placement
+	# Hide/show color ratio bar based on collector tower unlock AND placement
 	if color_ratio_box:
-		color_ratio_box.visible = ccollector_tower_unlocked and collector_tower_placed
+		color_ratio_box.visible = collector_tower_unlocked
 
 func refresh_beams():
 	print("Refreshing beams with new unlocked colors...")
@@ -932,8 +951,8 @@ func show_game_start_tutorial():
 	
 	tutorial_shown["game_start"] = true
 	show_tutorial(
-		"Welcome to Light Tower Defense!",
-		"Use mirrors to redirect the red laser beam and hit enemies. Click on empty tiles to place mirror towers. Press A key to activate the red beam and start defending!"
+		"Instructions",
+		"Click on empty tiles to place mirror towers.\nHold 'A' to activate the red beam.\nUse mirrors to direct the red laser and hit enemies.\n\nRight-click and drag to rotate camera.\nLeft + right-click to move camera.\nScroll wheel to zoom in and out."
 	)
 
 func show_first_tower_tutorial():
@@ -943,7 +962,7 @@ func show_first_tower_tutorial():
 	tutorial_shown["first_tower"] = true
 	show_tutorial(
 		"Tower Controls",
-		"Great! You placed your first tower. You can select towers by clicking on them, then use the controls in the bottom right to rotate them. You can also press M key to move towers to different positions."
+		"Nice! You placed your first tower. You can select towers by clicking on them, then use the controls in the bottom right to rotate, move, and delete them."
 	)
 
 func show_collector_tutorial():
@@ -953,7 +972,17 @@ func show_collector_tutorial():
 	tutorial_shown["collector_unlock"] = true
 	show_tutorial(
 		"Collector Tower Unlocked!",
-		"The Collector Tower absorbs light beams that hit it. Different beam colors create a color ratio that provides damage multipliers - the more balanced your colors, the higher your damage bonus! Place it strategically to collect multiple beam colors."
+		"The Collector Tower absorbs incoming light beams. The color ratio of absorbed light is shown in the top left. A balanced color ratio gives you a damage multiplier, up to 10x for a perfect balance of 7 colors.\n\n!! Only one Collector can be placed !!"
+	)
+
+func show_dual_beam_tutorial():
+	if tutorial_shown["dual_beam"]:
+		return
+	
+	tutorial_shown["dual_beam"] = true
+	show_tutorial(
+		"Dual Beam System!",
+		"You now have multiple beam colors! Use 'A' and 'S' keys to activate different beams.\n\nOnly TWO beams can be active at once. Press a key to activate that beam, press again to deactivate it.\n\nDifferent beam colors have unique effects - experiment to find powerful combinations!"
 	)
 
 # Tower controls background animation
