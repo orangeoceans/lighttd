@@ -54,7 +54,7 @@ const MIN_BALANCE_MULTIPLIER: float = 1.0   # No boost when unbalanced
 const TOTAL_BEAM_COLORS: int = 7            # Number of beam colors
 
 # Cached balance multiplier (recalculated only when beam counts change)
-var _cached_balance_multiplier: float = 10.0
+var _cached_balance_multiplier: float = 1.0
 
 # Increment a beam color count and normalize all counts
 func increment_beam_count(beam_color_enum: BeamColor, increment_amount: float = 1.0) -> void:

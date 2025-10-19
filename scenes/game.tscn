@@ -202,9 +202,9 @@ offset_bottom = 704.0
 
 [node name="StartWave" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_left = 264.0
+offset_left = 326.0
 offset_top = 3.0
-offset_right = 365.0
+offset_right = 427.0
 offset_bottom = 45.0
 theme_override_fonts/font = ExtResource("7_0tnpc")
 text = "Next Wave
@@ -212,9 +212,9 @@ text = "Next Wave
 
 [node name="BeamInfo" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_left = 374.0
+offset_left = 436.0
 offset_top = 3.0
-offset_right = 475.0
+offset_right = 537.0
 offset_bottom = 45.0
 theme_override_fonts/font = ExtResource("7_0tnpc")
 text = "Beam Info
@@ -222,9 +222,9 @@ text = "Beam Info
 
 [node name="ResetCamera" type="Button" parent="HUD/BottomBar"]
 layout_mode = 0
-offset_left = 484.0
+offset_left = 546.0
 offset_top = 3.0
-offset_right = 618.0
+offset_right = 680.0
 offset_bottom = 45.0
 theme_override_fonts/font = ExtResource("7_0tnpc")
 text = "Reset Camera"
@@ -233,7 +233,7 @@ text = "Reset Camera"
 layout_mode = 0
 offset_left = 2.0
 offset_top = -11.0
-offset_right = 226.0
+offset_right = 318.0
 offset_bottom = 61.0
 theme_override_fonts/normal_font = ExtResource("7_0tnpc")
 theme_override_font_sizes/normal_font_size = 48
