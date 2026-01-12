@@ -2,5 +2,13 @@
 
 [ext_resource type="Script" uid="uid://d0ec82p5iwy04" path="res://beam.gd" id="1_5ijbd"]
 
-[node name="Beam" type="Node3D"]
+[node name="Beam" type="Node3D" node_paths=PackedStringArray("sfx_emitter")]
 script = ExtResource("1_5ijbd")
+sfx_emitter = NodePath("SFXEmitter")
+
+[node name="SFXEmitter" type="FmodEventEmitter2D" parent="."]
+event_name = "event:/Objects/Beam 1"
+event_guid = "{4319ac21-1d82-4f59-80aa-fb88a69e00ca}"
+fmod_parameters/phase/id = -3037676240064463009
+fmod_parameters/phase = 0.0
+fmod_parameters/phase/variant_type = 3

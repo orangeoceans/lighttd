@@ -8,6 +8,7 @@ class_name TowerLine
 
 @export var tower_type: String = "mirror"
 @export var gem_node: Node3D = null
+@export var sfx_emitter: FmodEventEmitter3D
 
 # Start and end points in XZ plane (Vector2 represents X and Z coordinates)
 var start_point: Vector2
@@ -18,7 +19,7 @@ var _cached_rotation: float
 # Debug visualization
 var debug_start_mesh: MeshInstance3D
 var debug_end_mesh: MeshInstance3D
-
+	
 func _ready():
 	# Create collision shape for raycast detection
 	if get_child_count() == 0 or not has_node("CollisionShape3D"):
@@ -53,6 +54,7 @@ func _ready():
 	hide_indicators()
 	
 	update_endpoints()
+	sfx_emitter.play_action("place")
 
 func show_indicators():
 	if debug_start_mesh:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bxw4uu7t6ck8q"]
+[gd_scene load_steps=11 format=3 uid="uid://bxw4uu7t6ck8q"]
 
 [ext_resource type="Script" uid="uid://dnjfmsops52cg" path="res://scripts/enemy_controller.gd" id="1_p57ef"]
 [ext_resource type="PackedScene" uid="uid://bawb02ci81455" path="res://scenes/test_level.tscn" id="1_yqjtg"]
@@ -9,11 +9,27 @@
 [ext_resource type="FontFile" uid="uid://c818j6bi3j5hg" path="res://assets/fonts/VIDEOPHREAK.ttf" id="7_0tnpc"]
 [ext_resource type="FontFile" uid="uid://doqn1241uves8" path="res://assets/fonts/FluxDemo.ttf" id="7_gee14"]
 [ext_resource type="FontFile" uid="uid://d3nbitagyl7qv" path="res://assets/fonts/D-DIN.otf" id="8_0tnpc"]
+[ext_resource type="Script" uid="uid://dybb32xjow3si" path="res://scripts/music_controller.gd" id="10_vtaks"]
 
 [node name="Game" type="Node"]
 
-[node name="EnemyController" type="Node3D" parent="." node_paths=PackedStringArray("hud", "level")]
+[node name="MusicController" type="Node" parent="." node_paths=PackedStringArray("bgm_emitter")]
+script = ExtResource("10_vtaks")
+bgm_emitter = NodePath("BgmEmitter")
+
+[node name="FmodBankLoader" type="FmodBankLoader" parent="MusicController"]
+bank_paths = ["res://assets/banks/Desktop/Master.strings.bank", "res://assets/banks/Desktop/Master.bank"]
+
+[node name="BgmEmitter" type="FmodEventEmitter2D" parent="MusicController"]
+event_name = "event:/Gameplay"
+event_guid = "{96cf55b7-39ec-4e52-8bb5-115b3a322ff6}"
+fmod_parameters/phase/id = -3037676240064463009
+fmod_parameters/phase = 0.0
+fmod_parameters/phase/variant_type = 3
+
+[node name="EnemyController" type="Node3D" parent="." node_paths=PackedStringArray("music_controller", "hud", "level")]
 script = ExtResource("1_p57ef")
+music_controller = NodePath("../MusicController")
 hud = NodePath("../HUD")
 level = NodePath("../Level")
 
@@ -29,6 +45,8 @@ color_ratio_box = NodePath("../HUD/TopBar/ColorRatioBox")
 
 [node name="CameraRig" parent="." instance=ExtResource("2_lnu2h")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.6085, 0, 5.64857)
+
+[node name="FmodListener3D" type="FmodListener3D" parent="CameraRig"]
 
 [node name="HUD" type="Control" parent="."]
 layout_mode = 3

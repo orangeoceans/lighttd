@@ -19,6 +19,8 @@ var key_scene: PackedScene = preload("res://scenes/key.tscn")
 @export var base_dps: float = 2.0  # Base damage for beam at initial_beam_width
 @export var key: int = 0
 
+@export var sfx_emitter: FmodEventEmitter2D
+
 var beam_color_enum: Globals.BeamColor  # Single source of truth for beam color
 var beam_start_position : Vector3 = Vector3.ZERO
 var beam_start_direction : Vector2 = Vector2.ONE
@@ -90,6 +92,14 @@ func initialize(board: Board, beam_color_enum: Globals.BeamColor, position: Vect
 	# Create key indicator at beam origin
 	create_key_indicator()
 
+func activate():
+	is_active = true
+	sfx_emitter.play()
+	
+func deactivate():
+	is_active = false
+	sfx_emitter.stop()
+				
 func create_key_indicator():
 	# Try to load the scene if not already loaded
 	if not key_scene:

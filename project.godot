@@ -8,6 +8,10 @@
 
 config_version=5
 
+[Fmod]
+
+General/banks_path="res://assets/banks/Desktop"
+
 [application]
 
 config/name="LightTD"
@@ -20,6 +24,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Globals="*res://globals/globals.tscn"
+FmodManager="*res://addons/fmod/FmodManager.gd"
 
 [display]
 
@@ -30,6 +35,10 @@ window/stretch/mode="viewport"
 [dotnet]
 
 project/assembly_name="LightTD"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/fmod/plugin.cfg")
 
 [file_customization]
 

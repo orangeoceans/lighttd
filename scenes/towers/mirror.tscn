@@ -1,12 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://bmwk7rv2x7uid"]
+[gd_scene load_steps=5 format=3 uid="uid://bmwk7rv2x7uid"]
 
 [ext_resource type="Script" uid="uid://buo3r1eabk0v5" path="res://scripts/tower_line.gd" id="1_wuuii"]
 [ext_resource type="PackedScene" uid="uid://36mg4cw5tg8g" path="res://assets/models/2025-10-04_tower-01.gltf" id="2_a0pvk"]
 [ext_resource type="PackedScene" uid="uid://dshuee7q0508w" path="res://assets/models/2025-10-04_lens-03.gltf" id="3_yubgu"]
+[ext_resource type="Script" uid="uid://ckps485hffhij" path="res://scripts/sfx_emitter.gd" id="4_yubgu"]
 
-[node name="Tower" type="StaticBody3D" node_paths=PackedStringArray("gem_node")]
+[node name="Tower" type="StaticBody3D" node_paths=PackedStringArray("gem_node", "sfx_emitter")]
 script = ExtResource("1_wuuii")
 gem_node = NodePath("Gem")
+sfx_emitter = NodePath("SFXEmitter")
 
 [node name="blockbench_export" parent="." instance=ExtResource("2_a0pvk")]
 transform = Transform3D(-0.501972, 0, -4.38838e-08, 0, 0.263678, 0, 4.38838e-08, 0, -0.501972, 0.0154395, 0.0129973, -0.0179885)
@@ -15,3 +17,12 @@ transform = Transform3D(-0.501972, 0, -4.38838e-08, 0, 0.263678, 0, 4.38838e-08,
 
 [node name="GemMesh" parent="Gem" instance=ExtResource("3_yubgu")]
 transform = Transform3D(-1.09278e-07, 0, 1.39942, 0, 2.5, 0, -2.5, 0, -6.11702e-08, -0.072427, 0.3851, 0.000468969)
+
+[node name="SFXEmitter" type="FmodEventEmitter3D" parent="."]
+event_name = "event:/Objects/Tower"
+event_guid = "{377cd3bd-e100-43c3-a9cf-a4b7f9bb7e82}"
+fmod_parameters/action/id = 370875563283260276
+fmod_parameters/action = "place"
+fmod_parameters/action/labels = PackedStringArray("place", "rotate", "destroy")
+fmod_parameters/action/variant_type = 4
+script = ExtResource("4_yubgu")

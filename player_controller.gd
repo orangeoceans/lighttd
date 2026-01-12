@@ -171,7 +171,7 @@ func _ready():
 		setup_tutorial_interface()
 		
 		# Setup audio system
-		setup_audio_system()
+		# setup_audio_system()
 		
 		# Setup lives counter
 		setup_lives_counter()
@@ -245,12 +245,12 @@ func handle_beam_activation() -> void:
 					active_beams.erase(oldest_beam)
 				
 				# Activate this beam
-				beam.is_active = true
+				beam.activate()
 				active_beams.append(beam)
 		else:
 			# Key not pressed, deactivate this beam
 			if beam.is_active:
-				beam.is_active = false
+				beam.deactivate()
 				active_beams.erase(beam)
 
 func handle_camera_controls():
@@ -593,6 +593,7 @@ func stop_dragging(empty_tile: CollisionObject3D):
 			dragging_tower.global_position = Vector3(empty_tile.global_position.x, dragging_tower.global_position.y, empty_tile.global_position.z)
 			print("SNAPPED TO TILE")
 			select_tower(dragging_tower)
+			dragging_tower.play_action("place")
 	else:
 		print("NOT OVER TILE - RETURNING TO ORIGINAL")
 		cancel_dragging()
@@ -1171,7 +1172,7 @@ func setup_audio_system():
 		print("Successfully loaded energetic_music: ", energetic_music.get_class())
 	
 	# Start with calm music at game start (before first wave)
-	call_deferred("play_calm_music")
+	# call_deferred("play_calm_music")
 
 func play_title_music():
 	print("play_title_music called, current state: ", current_audio_state)

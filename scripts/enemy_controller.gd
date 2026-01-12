@@ -8,6 +8,7 @@ signal enemy_reached_end
 
 @export var enemies_per_wave: int = 10
 @export var spawn_cooldown: float = 1
+@export var music_controller: Node
 
 var current_wave: int = 1
 
@@ -52,6 +53,10 @@ func _ready():
 	if hud:
 		all_enemies_cleared.connect(hud._on_all_enemies_cleared)
 		wave_started.connect(hud._on_wave_started)
+	
+	if music_controller:
+		wave_started.connect(music_controller._on_wave_started)
+		all_enemies_cleared.connect(music_controller._on_all_enemies_cleared)
 
 func _process(_delta):
 	if wave_active:
